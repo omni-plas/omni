@@ -8,6 +8,7 @@ from .semantics import SemanticModel
 from .targets import TargetDescriptor
 from .types import TypeKind, TypeRef
 from .uir import UIR, UIRValidationError, validate_uir
+from .validation import SemanticValidationError, validate_function, validate_module
 
 __all__ = [
     "BasicBlock",
@@ -17,6 +18,7 @@ __all__ = [
     "Operation",
     "RuntimeErrorBase",
     "SemanticModel",
+    "SemanticValidationError",
     "TargetDescriptor",
     "TypeKind",
     "TypeRef",
@@ -27,5 +29,7 @@ __all__ = [
     "execute",
     "execute_module",
     "lower_to_ir",
+    "validate_function",
+    "validate_module",
     "validate_uir",
 ]
