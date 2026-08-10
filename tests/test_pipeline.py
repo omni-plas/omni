@@ -1,8 +1,8 @@
 from omni.pipeline import compile_semantics
 
 
-def test_pipeline_produces_validated_ir():
-    document = {
+def _base(functions):
+    return {
         "version": "0.1",
         "entity": {"kind": "application", "name": "pipeline-demo"},
         "source": {"language": "future-language"},
@@ -18,11 +18,24 @@ def test_pipeline_produces_validated_ir():
             "dependencies": [],
             "security": {},
             "performance": {},
-            "functions": [{"name": "main", "result": "void", "operations": [{"opcode": "return"}]}],
+            "functions": functions,
         },
     }
-    result = compile_semantics(document)
+
+
+def test_pipeline_produces_validated_ir():
+    result = compile_semantics(_base([{"name": "main", "result": "void", "operations": [{"opcode": "return"}]}]))
     assert result.ok
     assert result.ir.name == "pipeline-demo"
     assert result.ir.functions[0].name == "main"
     assert result.plan.target.identity() == "future-os-future-cpu"
+
+
+def test_pipeline_surfaces_undefined_ir_values():
+    result = compile_semantics(_base([{
+        "name": "main",
+        "result": "void",
+        "operations": [{"opcode": "use", "inputs": ["missing"]}],
+    }]))
+    assert not result.ok
+    assert any(d.code == "IR002" and d.severity.value == "error" for d in result.diagnostics)
