@@ -1,6 +1,8 @@
 """Omni universal digital creation and compilation engine."""
 
 from .artifacts import ArtifactManifest, manifest
+from .construct import ConstructionPlan, plan_construction
+from .digital import DigitalSpec
 from .emitters import EmitterError, emit_c
 from .entities import EntitySpec
 from .entity_validate import entity_from_mapping
@@ -17,11 +19,11 @@ from .uir import UIR, UIRValidationError, validate_uir
 from .validation import SemanticValidationError, validate_function, validate_module
 
 __all__ = [
-    "ArtifactManifest", "BasicBlock", "CompilationResult", "EmitterError", "EntitySpec",
-    "FunctionIR", "MaterializedArtifact", "Materializer", "ModuleIR", "Operation",
-    "RuntimeErrorBase", "SemanticModel", "SemanticValidationError", "TargetDescriptor",
-    "TypeDiagnostic", "TypeKind", "TypeRef", "UIR", "UIRValidationError", "Value",
-    "check_module", "compile_semantics", "emit_c", "entity_from_mapping", "execute",
-    "execute_module", "is_valid", "lower_to_ir", "manifest", "validate_function",
-    "validate_materialized_artifact", "validate_module", "validate_uir",
+    "ArtifactManifest", "BasicBlock", "CompilationResult", "ConstructionPlan", "DigitalSpec",
+    "EmitterError", "EntitySpec", "FunctionIR", "MaterializedArtifact", "Materializer", "ModuleIR",
+    "Operation", "RuntimeErrorBase", "SemanticModel", "SemanticValidationError", "TargetDescriptor",
+    "TypeDiagnostic", "TypeKind", "TypeRef", "UIR", "UIRValidationError", "Value", "check_module",
+    "compile_semantics", "emit_c", "entity_from_mapping", "execute", "execute_module", "is_valid",
+    "lower_to_ir", "manifest", "plan_construction", "validate_materialized_artifact", "validate_function",
+    "validate_module", "validate_uir",
 ]
