@@ -35,3 +35,21 @@ def test_typecheck_accepts_defined_value_flow():
     )
     assert check_module(module) == ()
     assert is_valid(module)
+
+
+def test_typecheck_rejects_redefinition():
+    module = ModuleIR(
+        name="demo",
+        types={},
+        functions=(FunctionIR(
+            name="main",
+            parameters={"input": I32},
+            result=I32,
+            blocks=(BasicBlock("entry", (
+                Operation("copy", inputs=("input",), outputs=("x",)),
+                Operation("copy", inputs=("input",), outputs=("x",)),
+            )),),
+        ),),
+    )
+    diagnostics = check_module(module)
+    assert any(d.code == "IR007" for d in diagnostics)
