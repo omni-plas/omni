@@ -3,18 +3,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Mapping, Sequence
+from typing import Any, Mapping
 
 from .compiler import CompilationPlan, plan_compilation
 from .diagnostics import Diagnostic, Severity
 from .ir import ModuleIR
+from .lower import lower_to_ir
 from .uir import UIR, validate_uir
 
 
 @dataclass(frozen=True)
 class CompilationResult:
     plan: CompilationPlan
-    ir: ModuleIR | None
+    ir: ModuleIR
     diagnostics: tuple[Diagnostic, ...]
 
     @property
@@ -22,16 +23,16 @@ class CompilationResult:
         return not any(d.severity == Severity.ERROR for d in self.diagnostics)
 
 
-def validate_and_plan(document: Mapping[str, Any] | UIR) -> CompilationResult:
-    """Run the front half of compilation without fabricating an output artifact."""
+def compile_semantics(document: Mapping[str, Any] | UIR) -> CompilationResult:
+    """Validate UIR, derive a target plan, and lower it into semantic IR."""
     uir = document if isinstance(document, UIR) else validate_uir(document)
     plan = plan_compilation(uir)
-    diagnostics: Sequence[Diagnostic] = (
+    ir = lower_to_ir(uir)
+    diagnostics = (
         Diagnostic(
             code="OMNI1000",
             severity=Severity.INFO,
-            message="UIR validated and semantic compilation plan created",
-            path=None,
+            message="UIR validated, planned, and lowered into semantic IR",
         ),
     )
-    return CompilationResult(plan=plan, ir=None, diagnostics=tuple(diagnostics))
+    return CompilationResult(plan=plan, ir=ir, diagnostics=diagnostics)
