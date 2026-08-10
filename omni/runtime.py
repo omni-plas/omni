@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from .ir import FunctionIR, ModuleIR, Operation
+from .validation import SemanticValidationError, validate_function, validate_module
 
 
 class RuntimeErrorBase(RuntimeError):
@@ -23,13 +24,9 @@ def _execute_operation(operation: Operation, env: dict[str, Any]) -> Any:
     attrs = operation.attributes
 
     if opcode == "const":
-        if not operation.outputs:
-            raise RuntimeErrorBase("const requires an output")
-        env[operation.outputs[0]] = attrs.get("value")
+        env[operation.outputs[0]] = attrs["value"]
         return None
     if opcode in {"add", "sub", "mul", "div"}:
-        if len(args) != 2 or len(operation.outputs) != 1:
-            raise RuntimeErrorBase(f"{opcode} requires two inputs and one output")
         if opcode == "add":
             result = args[0] + args[1]
         elif opcode == "sub":
@@ -43,14 +40,17 @@ def _execute_operation(operation: Operation, env: dict[str, Any]) -> Any:
         env[operation.outputs[0]] = result
         return None
     if opcode == "return":
-        if len(args) > 1:
-            raise RuntimeErrorBase("return accepts at most one input")
         return args[0] if args else None
     raise RuntimeErrorBase(f"unsupported operation: {opcode}")
 
 
 def execute(function: FunctionIR, arguments: dict[str, Any] | None = None) -> Any:
-    """Execute a validated FunctionIR using the reference runtime."""
+    """Execute a semantically validated FunctionIR using the reference runtime."""
+    try:
+        validate_function(function)
+    except SemanticValidationError as exc:
+        raise RuntimeErrorBase(str(exc)) from exc
+
     env = dict(arguments or {})
     for name in function.parameters:
         if name not in env:
@@ -77,7 +77,10 @@ def execute(function: FunctionIR, arguments: dict[str, Any] | None = None) -> An
 
 def execute_module(module: ModuleIR, entry: str, arguments: dict[str, Any] | None = None) -> Any:
     """Execute a named function from a validated module."""
-    module.validate()
+    try:
+        validate_module(module)
+    except SemanticValidationError as exc:
+        raise RuntimeErrorBase(str(exc)) from exc
     for function in module.functions:
         if function.name == entry:
             return execute(function, arguments)
