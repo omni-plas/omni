@@ -15,6 +15,7 @@ from .pipeline import CompilationResult, compile_semantics
 from .plugins import PluginRegistry
 from .runtime import RuntimeErrorBase, execute, execute_module
 from .semantics import SemanticModel
+from .targeting import TargetMatch, TargetResolutionError, resolve_target
 from .targets import TargetDescriptor
 from .typecheck import TypeDiagnostic, check_module, is_valid
 from .types import TypeKind, TypeRef
@@ -25,8 +26,9 @@ __all__ = [
     "ArtifactManifest", "BasicBlock", "CapabilityGap", "CapabilityReport", "CompilationResult",
     "ConstructionPlan", "DigitalSpec", "EmitterError", "EntitySpec", "FunctionIR", "MaterializedArtifact",
     "Materializer", "ModuleIR", "Operation", "PluginRegistry", "RuntimeErrorBase", "SemanticModel",
-    "SemanticValidationError", "TargetDescriptor", "TypeDiagnostic", "TypeKind", "TypeRef", "UIR",
-    "UIRValidationError", "Value", "check_module", "compile_semantics", "emit_c", "entity_from_mapping",
-    "execute", "execute_module", "is_valid", "lower_to_ir", "manifest", "match", "optimize_module",
-    "plan_construction", "validate_materialized_artifact", "validate_function", "validate_module", "validate_uir",
+    "SemanticValidationError", "TargetDescriptor", "TargetMatch", "TargetResolutionError", "TypeDiagnostic",
+    "TypeKind", "TypeRef", "UIR", "UIRValidationError", "Value", "check_module", "compile_semantics",
+    "emit_c", "entity_from_mapping", "execute", "execute_module", "is_valid", "lower_to_ir", "manifest",
+    "match", "optimize_module", "plan_construction", "resolve_target", "validate_materialized_artifact",
+    "validate_function", "validate_module", "validate_uir",
 ]
