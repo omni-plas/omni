@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from dataclasses import dataclass
 from typing import Any, Mapping
 
+from .canonical import canonical_ir_bytes
 from .ir import ModuleIR
 from .targets import TargetDescriptor
+import hashlib
 
 
 @dataclass(frozen=True)
@@ -34,11 +34,9 @@ class BuildManifest:
 
 def manifest_for(module: ModuleIR, target: TargetDescriptor, metadata: Mapping[str, Any] | None = None) -> BuildManifest:
     """Create a stable manifest fingerprint for a semantic IR build."""
-    module.validate()
-    canonical = json.dumps(module.to_dict(), sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
     return BuildManifest(
         compiler="omni-semantic",
         target=target,
-        ir_sha256=hashlib.sha256(canonical).hexdigest(),
+        ir_sha256=hashlib.sha256(canonical_ir_bytes(module)).hexdigest(),
         metadata=dict(metadata or {}),
     )
