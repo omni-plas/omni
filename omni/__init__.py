@@ -10,6 +10,7 @@ from .entity_validate import entity_from_mapping
 from .ir import BasicBlock, FunctionIR, ModuleIR, Operation, Value
 from .lower import lower_to_ir
 from .materialize import MaterializedArtifact, Materializer, validate_materialized_artifact
+from .optimize import optimize_module
 from .pipeline import CompilationResult, compile_semantics
 from .plugins import PluginRegistry
 from .runtime import RuntimeErrorBase, execute, execute_module
@@ -26,6 +27,6 @@ __all__ = [
     "Materializer", "ModuleIR", "Operation", "PluginRegistry", "RuntimeErrorBase", "SemanticModel",
     "SemanticValidationError", "TargetDescriptor", "TypeDiagnostic", "TypeKind", "TypeRef", "UIR",
     "UIRValidationError", "Value", "check_module", "compile_semantics", "emit_c", "entity_from_mapping",
-    "execute", "execute_module", "is_valid", "lower_to_ir", "manifest", "match", "plan_construction",
-    "validate_materialized_artifact", "validate_function", "validate_module", "validate_uir",
+    "execute", "execute_module", "is_valid", "lower_to_ir", "manifest", "match", "optimize_module",
+    "plan_construction", "validate_materialized_artifact", "validate_function", "validate_module", "validate_uir",
 ]
