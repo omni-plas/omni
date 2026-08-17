@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass
 from typing import Any, Mapping
 
 from .canonical import canonical_ir_bytes
 from .ir import ModuleIR
 from .targets import TargetDescriptor
-import hashlib
 
 
 @dataclass(frozen=True)
