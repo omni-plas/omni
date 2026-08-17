@@ -1,23 +1,19 @@
-"""Validation bridge from open-world entity specifications into UIR."""
+"""Validation bridge from open-world entity specifications into Omni APIs."""
 
 from __future__ import annotations
 
 from typing import Any, Mapping
 
 from .entities import EntitySpec
-from .uir import UIRValidationError
+from .errors import ValidationError
 
 
 def entity_from_mapping(document: Mapping[str, Any]) -> EntitySpec:
     """Build and validate an EntitySpec without restricting its kind."""
     if not isinstance(document, Mapping):
-        raise UIRValidationError("entity specification must be an object")
+        raise ValidationError("entity specification must be an object")
     inputs = tuple(document.get("inputs", ()))
     outputs = tuple(document.get("outputs", ()))
-    if not isinstance(inputs, tuple):
-        inputs = tuple(inputs)
-    if not isinstance(outputs, tuple):
-        outputs = tuple(outputs)
     entity = EntitySpec(
         kind=document.get("kind", ""),
         name=document.get("name", ""),
@@ -31,5 +27,5 @@ def entity_from_mapping(document: Mapping[str, Any]) -> EntitySpec:
     try:
         entity.validate()
     except (TypeError, ValueError) as exc:
-        raise UIRValidationError(str(exc)) from exc
+        raise ValidationError(str(exc)) from exc
     return entity
