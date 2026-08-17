@@ -7,6 +7,7 @@ from typing import Any, Mapping
 
 from .compiler import CompilationPlan, plan_compilation
 from .diagnostics import Diagnostic, Severity
+from .errors import ValidationError
 from .ir import ModuleIR
 from .lower import lower_to_ir
 from .optimize import optimize_module
@@ -17,7 +18,7 @@ from .uir import UIR, validate_uir
 @dataclass(frozen=True)
 class CompilationResult:
     plan: CompilationPlan
-    ir: ModuleIR
+    ir: ModuleIR | None
     diagnostics: tuple[Diagnostic, ...]
 
     @property
@@ -26,27 +27,22 @@ class CompilationResult:
 
 
 def compile_semantics(document: Mapping[str, Any] | UIR) -> CompilationResult:
-    """Validate, plan, lower, optimize, and verify a semantic program."""
-    uir = document if isinstance(document, UIR) else validate_uir(document)
-    plan = plan_compilation(uir)
-    ir = lower_to_ir(uir)
-    diagnostics: list[Diagnostic] = [
-        Diagnostic(
-            code="OMNI1000",
-            severity=Severity.INFO,
-            message="UIR validated, planned, lowered, and optimized into semantic IR",
-        ),
-    ]
+    """Validate, plan, lower, type-check, and optimize a semantic program."""
+    try:
+        uir = document if isinstance(document, UIR) else validate_uir(document)
+        plan = plan_compilation(uir)
+        ir = lower_to_ir(uir)
+    except (ValueError, TypeError) as exc:
+        raise ValidationError(str(exc)) from exc
+
+    diagnostics: list[Diagnostic] = []
     for diagnostic in check_module(ir):
-        diagnostics.append(
-            Diagnostic(
-                code=diagnostic.code,
-                severity=Severity.ERROR,
-                message=diagnostic.message,
-                path=f"{diagnostic.function or 'module'}:{diagnostic.block}" if diagnostic.block else diagnostic.function,
-            )
-        )
-    if any(d.severity == Severity.ERROR for d in diagnostics):
+        diagnostics.append(Diagnostic(
+            code=diagnostic.code,
+            severity=Severity.ERROR,
+            message=diagnostic.message,
+            path=f"{diagnostic.function or 'module'}:{diagnostic.block}" if diagnostic.block else diagnostic.function,
+        ))
+    if diagnostics:
         return CompilationResult(plan=plan, ir=ir, diagnostics=tuple(diagnostics))
-    optimized = optimize_module(ir)
-    return CompilationResult(plan=plan, ir=optimized, diagnostics=tuple(diagnostics))
+    return CompilationResult(plan=plan, ir=optimize_module(ir), diagnostics=())
