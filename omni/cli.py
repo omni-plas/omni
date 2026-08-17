@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from .emitters import EmitterError, emit_c
+from .errors import OmniError
 from .lower import lower_to_ir
 from .pipeline import compile_semantics
 from .runtime import execute_module
@@ -18,16 +19,13 @@ from .targets import TargetDescriptor
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="omni", description="Omni semantic compiler")
     subparsers = parser.add_subparsers(dest="command", required=True)
-
     run = subparsers.add_parser("run", help="validate, lower, and execute a UIR JSON program")
     run.add_argument("source", type=Path)
     run.add_argument("--entry", default=None)
     run.add_argument("--args", default="{}", help="JSON object containing entry arguments")
-
     emit = subparsers.add_parser("emit-c", help="emit a UIR program as C99 source")
     emit.add_argument("source", type=Path)
     emit.add_argument("output", type=Path)
-
     return parser
 
 
@@ -37,6 +35,10 @@ def main(argv: list[str] | None = None) -> int:
         document = loads_uir(args.source.read_text(encoding="utf-8"))
         if args.command == "run":
             result = compile_semantics(document)
+            if not result.ok or result.ir is None:
+                for diagnostic in result.diagnostics:
+                    print(f"omni: {diagnostic.severity.value}: {diagnostic.message}", file=sys.stderr)
+                return 2
             entry = args.entry or document["semantics"]["program"]["entry"]
             values = json.loads(args.args)
             if not isinstance(values, dict):
@@ -44,13 +46,11 @@ def main(argv: list[str] | None = None) -> int:
             output = execute_module(result.ir, entry, values)
             print(json.dumps(output, ensure_ascii=False))
             return 0
-
         if args.command == "emit-c":
             module = lower_to_ir(document)
-            payload = emit_c(module, TargetDescriptor("portable-c"))
-            args.output.write_bytes(payload)
+            args.output.write_bytes(emit_c(module, TargetDescriptor("portable-c")))
             return 0
-    except (OSError, ValueError, KeyError, EmitterError) as exc:
+    except (OSError, ValueError, KeyError, EmitterError, OmniError) as exc:
         print(f"omni: error: {exc}", file=sys.stderr)
         return 2
     return 2
