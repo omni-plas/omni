@@ -17,7 +17,12 @@ class Artifact:
 
 
 class Backend(Protocol):
-    """Lowers semantic UIR into a concrete artifact for a target."""
+    """Backend capability for turning validated Omni programs into artifacts."""
+
+    def supports_target(self, target: TargetDescriptor) -> bool:
+        """Return whether this backend can emit the requested target."""
+        ...
 
     def emit(self, program: UIR, target: TargetDescriptor) -> Artifact:
+        """Emit an artifact after target compatibility has been established."""
         ...
