@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Mapping
 
+from .creation import CreationPlan, plan_creation
 from .digital import DigitalSpec
 
 @dataclass(frozen=True)
@@ -22,6 +23,8 @@ def plan_construction(spec: DigitalSpec | Mapping[str, Any]) -> ConstructionPlan
             data=spec.get("data", {}), requirements=spec.get("requirements", {}),
             extensions=spec.get("extensions", {}),
         )
-    spec.validate()
+    creation = plan_creation(spec)
     steps = ("validate", "model", "lower", "materialize", "verify")
+    if creation.executable:
+        steps = ("validate",) + tuple(step.action for step in creation.steps) + ("verify",)
     return ConstructionPlan(spec, steps)
