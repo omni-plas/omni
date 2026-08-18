@@ -2,6 +2,7 @@
 
 from .artifacts import ArtifactManifest, manifest
 from .capabilities import CapabilityGap, CapabilityReport, match
+from .capability import CapabilityRequirement, evaluate_capabilities
 from .construct import ConstructionPlan, plan_construction
 from .digital import DigitalSpec
 from .emitters import EmitterError, emit_c
@@ -26,12 +27,12 @@ from .validation_report import ValidationReport, report
 
 __all__ = [
     "ArtifactManifest", "BackendError", "BasicBlock", "CapabilityError", "CapabilityGap", "CapabilityReport",
-    "CompilationResult", "ConstructionPlan", "DigitalSpec", "EmitterError", "EntitySpec", "FunctionIR",
-    "LoweringError", "MaterializedArtifact", "Materializer", "ModuleIR", "OmniError", "Operation",
+    "CapabilityRequirement", "CompilationResult", "ConstructionPlan", "DigitalSpec", "EmitterError", "EntitySpec",
+    "FunctionIR", "LoweringError", "MaterializedArtifact", "Materializer", "ModuleIR", "OmniError", "Operation",
     "PluginRegistry", "RuntimeErrorBase", "SemanticModel", "SemanticValidationError", "TargetDescriptor",
-    "TargetMatch", "TargetResolutionError", "TypeDiagnostic", "TypeKind", "TypeRef", "UIR",
-    "UIRValidationError", "ValidationError", "ValidationReport", "Value", "check_module", "compile_semantics",
-    "emit_c", "entity_from_mapping", "execute", "execute_module", "is_valid", "lower_to_ir", "manifest", "match",
+    "TargetMatch", "TargetResolutionError", "TypeDiagnostic", "TypeKind", "TypeRef", "UIR", "UIRValidationError",
+    "ValidationError", "ValidationReport", "Value", "check_module", "compile_semantics", "emit_c", "entity_from_mapping",
+    "evaluate_capabilities", "execute", "execute_module", "is_valid", "lower_to_ir", "manifest", "match",
     "optimize_module", "plan_construction", "report", "resolve_target", "validate_materialized_artifact",
-    "validate_function", "validate_module", "validate_uir",
+    "validate_function", "validate_module",
 ]
