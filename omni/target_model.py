@@ -1,4 +1,4 @@
-"""Open-world target model for operating systems, runtimes and future platforms."""
+"""Open-world target semantics used by Omni backends."""
 
 from __future__ import annotations
 
@@ -17,8 +17,8 @@ class TargetModel:
     constraints: Mapping[str, object] = ()
 
     def __post_init__(self) -> None:
-        for field in (self.platform, self.architecture, self.runtime, self.abi, self.execution_model):
-            if not isinstance(field, str) or not field.strip():
+        for value in (self.platform, self.architecture, self.runtime, self.abi, self.execution_model):
+            if not isinstance(value, str) or not value.strip():
                 raise ValueError("target identity fields must be non-empty strings")
 
     @property
@@ -27,3 +27,14 @@ class TargetModel:
 
     def supports(self, capability: str) -> bool:
         return bool(self.capabilities.get(capability, False))
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "platform": self.platform,
+            "architecture": self.architecture,
+            "runtime": self.runtime,
+            "abi": self.abi,
+            "execution_model": self.execution_model,
+            "capabilities": dict(self.capabilities),
+            "constraints": dict(self.constraints),
+        }
