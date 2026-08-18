@@ -13,6 +13,7 @@ from .entity_validate import entity_from_mapping
 from .errors import BackendError, CapabilityError, LoweringError, OmniError, ValidationError
 from .frontend import Frontend, FrontendRegistry
 from .ir import BasicBlock, FunctionIR, ModuleIR, Operation, Value
+from .language import OmniKeyword, OmniProgram
 from .lexer import Token, tokenize
 from .lower import lower_to_ir
 from .materialize import MaterializedArtifact, Materializer, validate_materialized_artifact
@@ -35,11 +36,11 @@ __all__ = [
     "Artifact", "ArtifactManifest", "Backend", "BackendError", "BasicBlock", "CapabilityError", "CapabilityGap",
     "CapabilityReport", "CapabilityRequirement", "CompilationResult", "ConstructionPlan", "CreationPlan", "CreationStep",
     "DigitalSpec", "EmitterError", "EntitySpec", "Frontend", "FrontendRegistry", "FunctionIR", "LoweringError",
-    "MaterializedArtifact", "Materializer", "ModuleIR", "OmniError", "Operation", "PluginRegistry", "RuntimeErrorBase",
-    "SemanticModel", "SemanticValidationError", "SourceNode", "SourceSpan", "SourceUnit", "TargetDescriptor", "TargetMatch",
-    "TargetModel", "TargetResolutionError", "Token", "TypeDiagnostic", "TypeKind", "TypeRef", "UIR", "UIRValidationError",
-    "ValidationError", "ValidationReport", "Value", "check_module", "compile_semantics", "emit_c", "emit_with_backend",
-    "entity_from_mapping", "evaluate_capabilities", "execute", "execute_module", "is_valid", "lower_to_ir", "manifest", "match",
-    "optimize_module", "plan_construction", "plan_creation", "report", "resolve_target", "tokenize",
+    "MaterializedArtifact", "Materializer", "ModuleIR", "OmniError", "OmniKeyword", "OmniProgram", "Operation",
+    "PluginRegistry", "RuntimeErrorBase", "SemanticModel", "SemanticValidationError", "SourceNode", "SourceSpan", "SourceUnit",
+    "TargetDescriptor", "TargetMatch", "TargetModel", "TargetResolutionError", "Token", "TypeDiagnostic", "TypeKind", "TypeRef",
+    "UIR", "UIRValidationError", "ValidationError", "ValidationReport", "Value", "check_module", "compile_semantics", "emit_c",
+    "emit_with_backend", "entity_from_mapping", "evaluate_capabilities", "execute", "execute_module", "is_valid", "lower_to_ir",
+    "manifest", "match", "optimize_module", "plan_construction", "plan_creation", "report", "resolve_target", "tokenize",
     "validate_materialized_artifact", "validate_function", "validate_module", "validate_uir",
 ]
