@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .ir import FunctionIR, ModuleIR
+from .ir import BasicBlock, FunctionIR, ModuleIR, Operation
 from .types import TypeKind, TypeRef
 
 
@@ -14,6 +14,7 @@ class TypeDiagnostic:
     message: str
     function: str | None = None
     block: str | None = None
+    value: str | None = None
 
 
 def _compatible(left: TypeRef, right: TypeRef) -> bool:
@@ -23,7 +24,15 @@ def _compatible(left: TypeRef, right: TypeRef) -> bool:
         return False
     if left.name != right.name or len(left.parameters) != len(right.parameters):
         return False
-    return all(_compatible(a, b) for a, b in zip(left.parameters, right.parameters))
+    if set(left.fields) != set(right.fields):
+        return False
+    return all(_compatible(a, b) for a, b in zip(left.parameters, right.parameters)) and all(
+        _compatible(left.fields[name], right.fields[name]) for name in left.fields
+    )
+
+
+def _diag(code: str, message: str, function: FunctionIR, block: BasicBlock, value: str | None = None) -> TypeDiagnostic:
+    return TypeDiagnostic(code, message, function.name, block.name, value)
 
 
 def check_module(module: ModuleIR) -> tuple[TypeDiagnostic, ...]:
@@ -41,31 +50,38 @@ def check_module(module: ModuleIR) -> tuple[TypeDiagnostic, ...]:
 def _check_function(function: FunctionIR) -> list[TypeDiagnostic]:
     diagnostics: list[TypeDiagnostic] = []
     definitions = dict(function.parameters)
+    terminated = False
     for block in function.blocks:
+        terminated = False
         for operation in block.operations:
+            if terminated:
+                diagnostics.append(_diag("IR008", "operation appears after a terminator", function, block))
+                continue
             for name in operation.inputs:
                 if name not in definitions:
-                    diagnostics.append(TypeDiagnostic("IR002", f"use of undefined value: {name}", function.name, block.name))
+                    diagnostics.append(_diag("IR002", f"use of undefined value: {name}", function, block, name))
             if len(operation.outputs) != len(set(operation.outputs)):
-                diagnostics.append(TypeDiagnostic("IR003", f"duplicate operation output: {operation.opcode}", function.name, block.name))
+                diagnostics.append(_diag("IR003", f"duplicate operation output: {operation.opcode}", function, block))
             declared = operation.attributes.get("input_types")
             if declared is not None:
                 if not isinstance(declared, (list, tuple)) or len(declared) != len(operation.inputs):
-                    diagnostics.append(TypeDiagnostic("IR004", "input_types must match operation inputs", function.name, block.name))
+                    diagnostics.append(_diag("IR004", "input_types must match operation inputs", function, block))
                 else:
                     for value_name, expected in zip(operation.inputs, declared):
                         if value_name in definitions and isinstance(expected, TypeRef) and not _compatible(definitions[value_name], expected):
-                            diagnostics.append(TypeDiagnostic("IR005", f"type mismatch for value: {value_name}", function.name, block.name))
+                            diagnostics.append(_diag("IR005", f"type mismatch for value: {value_name}", function, block, value_name))
             output_type = operation.attributes.get("output_type")
             if output_type is not None and not isinstance(output_type, TypeRef):
-                diagnostics.append(TypeDiagnostic("IR006", "output_type must be a TypeRef", function.name, block.name))
+                diagnostics.append(_diag("IR006", "output_type must be a TypeRef", function, block))
             for output in operation.outputs:
                 if output in definitions:
-                    diagnostics.append(TypeDiagnostic("IR007", f"redefinition of value: {output}", function.name, block.name))
+                    diagnostics.append(_diag("IR007", f"redefinition of value: {output}", function, block, output))
                 elif isinstance(output_type, TypeRef):
                     definitions[output] = output_type
                 else:
                     definitions[output] = TypeRef(TypeKind.ANY)
+            if operation.opcode in {"return", "branch"}:
+                terminated = True
     return diagnostics
 
 
