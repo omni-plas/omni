@@ -50,6 +50,7 @@ def test_reference_runtime_supports_comparison_and_boolean_ops():
 
 def test_reference_runtime_supports_extended_comparisons():
     integer = TypeRef(TypeKind.INTEGER)
+    boolean = TypeRef(TypeKind.BOOL)
     function = FunctionIR(
         name="compare", parameters={"x": integer, "y": integer}, result=boolean,
         blocks=(BasicBlock(name="entry", operations=(
