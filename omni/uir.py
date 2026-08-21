@@ -14,7 +14,7 @@ class UIRValidationError(ValueError):
 
 @dataclass(frozen=True)
 class UIR:
-    """A language- and target-neutral semantic program description."""
+    """A language- and target-neutral semantic digital-entity description."""
 
     version: str
     entity: Mapping[str, Any]
@@ -33,6 +33,15 @@ class UIR:
             "constraints": dict(self.constraints),
         }
 
+    @property
+    def entity_kind(self) -> str:
+        return str(self.entity["kind"])
+
+    @property
+    def entity_name(self) -> str | None:
+        value = self.entity.get("name")
+        return None if value is None else str(value)
+
 
 def _require_mapping(value: Any, path: str) -> Mapping[str, Any]:
     if not isinstance(value, Mapping):
@@ -46,6 +55,20 @@ def _require_nonempty_string(value: Any, path: str) -> str:
     return value
 
 
+def _validate_entity(entity: Mapping[str, Any]) -> None:
+    _require_nonempty_string(entity.get("kind"), "entity.kind")
+    if "name" in entity and entity["name"] is not None:
+        _require_nonempty_string(entity["name"], "entity.name")
+    for key in ("structure", "behavior", "inputs", "outputs", "execution_model", "metadata"):
+        if key not in entity:
+            continue
+        value = entity[key]
+        if key in {"structure", "behavior", "execution_model", "metadata"}:
+            _require_mapping(value, f"entity.{key}")
+        elif not isinstance(value, (list, tuple, Mapping)):
+            raise UIRValidationError(f"entity.{key} must be an object or array")
+
+
 def validate_uir(document: Mapping[str, Any]) -> UIR:
     root = _require_mapping(document, "UIR")
     version = _require_nonempty_string(root.get("version"), "version")
@@ -54,7 +77,7 @@ def validate_uir(document: Mapping[str, Any]) -> UIR:
     target = validate_target_descriptor(root.get("target"))
     semantics = _require_mapping(root.get("semantics"), "semantics")
     constraints = _require_mapping(root.get("constraints", {}), "constraints")
-    _require_nonempty_string(entity.get("kind"), "entity.kind")
+    _validate_entity(entity)
     if "program" not in semantics and "behavior" not in semantics:
         raise UIRValidationError("semantics must define program or behavior")
     return UIR(version, entity, source, target, semantics, constraints)
