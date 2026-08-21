@@ -7,6 +7,7 @@ import json
 import sys
 from pathlib import Path
 
+from .diagnostics import format_diagnostics
 from .emitters import EmitterError, emit_c
 from .errors import OmniError
 from .lower import lower_to_ir
@@ -42,8 +43,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command in {"validate", "run"}:
             result = compile_semantics(document)
             if not result.ok or result.ir is None:
-                for diagnostic in result.diagnostics:
-                    print(f"omni: {diagnostic.severity.value}: {diagnostic.message}", file=sys.stderr)
+                print(format_diagnostics(result.diagnostics), file=sys.stderr)
                 return 2
             if args.command == "validate":
                 print("valid")
