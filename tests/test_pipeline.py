@@ -1,12 +1,12 @@
 from omni.pipeline import compile_semantics
 
 
-def _base(functions):
+def _base(functions, *, target=None):
     return {
         "version": "0.1",
         "entity": {"kind": "application", "name": "pipeline-demo"},
         "source": {"language": "future-language"},
-        "target": {"platform": "future-os", "architecture": "future-cpu"},
+        "target": target or {"platform": "future-os", "architecture": "future-cpu"},
         "semantics": {
             "program": {"entry": "main"}, "types": {}, "control_flow": {}, "data_flow": {},
             "memory_model": {}, "error_handling": {}, "io": {}, "dependencies": [],
@@ -38,3 +38,21 @@ def test_pipeline_surfaces_semantic_ir_errors():
     }]))
     assert not result.ok
     assert any(d.code == "SEMANTIC_IR" for d in result.diagnostics)
+
+
+def test_pipeline_preserves_custom_target_capabilities():
+    result = compile_semantics(_base([{"name": "main", "result": "void", "operations": [{"opcode": "return"}]}], target={
+        "platform": "future-os", "architecture": "future-cpu", "abi": "future-abi",
+        "capabilities": {"graphics.v9": True, "memory.tagged": {"mode": "strict"}},
+    }))
+    assert result.ok
+    assert result.plan.target.capability("graphics.v9") is True
+    assert result.plan.target.capability("memory.tagged")["mode"] == "strict"
+
+
+def test_pipeline_rejects_invalid_target_capabilities():
+    import pytest
+    with pytest.raises(Exception, match="capabilities"):
+        compile_semantics(_base([{"name": "main", "result": "void", "operations": [{"opcode": "return"}]}], target={
+            "platform": "future-os", "capabilities": []
+        }))
