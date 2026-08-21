@@ -19,7 +19,6 @@ def test_reference_runtime_executes_arithmetic_function():
 
 def test_reference_runtime_executes_conditional_branch():
     integer = TypeRef(TypeKind.INTEGER)
-    boolean = TypeRef(TypeKind.BOOLEAN)
     function = FunctionIR(
         name="max", parameters={"x": integer, "y": integer}, result=integer,
         blocks=(
@@ -33,6 +32,33 @@ def test_reference_runtime_executes_conditional_branch():
     )
     assert execute(function, {"x": 2, "y": 3}) == 3
     assert execute(function, {"x": 5, "y": 3}) == 5
+
+
+def test_reference_runtime_supports_comparison_and_boolean_ops():
+    boolean = TypeRef(TypeKind.BOOL)
+    function = FunctionIR(
+        name="predicate", parameters={"x": boolean, "y": boolean}, result=boolean,
+        blocks=(BasicBlock(name="entry", operations=(
+            Operation("and", inputs=("x", "y"), outputs=("both",)),
+            Operation("not", inputs=("both",), outputs=("neither",)),
+            Operation("return", inputs=("neither",)),
+        )),),
+    )
+    assert execute(function, {"x": True, "y": True}) is False
+    assert execute(function, {"x": True, "y": False}) is True
+
+
+def test_reference_runtime_supports_extended_comparisons():
+    integer = TypeRef(TypeKind.INTEGER)
+    function = FunctionIR(
+        name="compare", parameters={"x": integer, "y": integer}, result=boolean,
+        blocks=(BasicBlock(name="entry", operations=(
+            Operation("cmp_ge", inputs=("x", "y"), outputs=("ge",)),
+            Operation("return", inputs=("ge",)),
+        )),),
+    )
+    assert execute(function, {"x": 4, "y": 4}) is True
+    assert execute(function, {"x": 3, "y": 4}) is False
 
 
 def test_reference_runtime_rejects_missing_return():
