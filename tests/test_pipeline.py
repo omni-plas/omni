@@ -1,4 +1,7 @@
+import pytest
+
 from omni.pipeline import compile_semantics
+from omni.uir import UIRValidationError
 
 
 def _base(functions, *, target=None):
@@ -51,8 +54,7 @@ def test_pipeline_preserves_custom_target_capabilities():
 
 
 def test_pipeline_rejects_invalid_target_capabilities():
-    import pytest
-    with pytest.raises(Exception, match="capabilities"):
+    with pytest.raises(UIRValidationError, match="capabilities"):
         compile_semantics(_base([{"name": "main", "result": "void", "operations": [{"opcode": "return"}]}], target={
             "platform": "future-os", "capabilities": []
         }))
