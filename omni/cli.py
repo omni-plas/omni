@@ -1,4 +1,4 @@
-"""Command-line entry point for Omni validation, execution, and emission."""
+"""Command-line entry point for Omni validation, execution, inspection, and emission."""
 
 from __future__ import annotations
 
@@ -19,20 +19,40 @@ from .targets import TargetDescriptor
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="omni", description="Omni semantic compiler")
     subparsers = parser.add_subparsers(dest="command", required=True)
+
     run = subparsers.add_parser("run", help="validate, lower, and execute a UIR JSON program")
     run.add_argument("source", type=Path)
     run.add_argument("--entry", default=None)
     run.add_argument("--args", default="{}", help="JSON object containing entry arguments")
+
+    validate = subparsers.add_parser("validate", help="validate a UIR JSON program without executing it")
+    validate.add_argument("source", type=Path)
+
     emit = subparsers.add_parser("emit-c", help="emit a UIR program as C99 source")
     emit.add_argument("source", type=Path)
     emit.add_argument("output", type=Path)
+
     return parser
+
+
+def _load(path: Path) -> dict:
+    return loads_uir(path.read_text(encoding="utf-8"))
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
-        document = loads_uir(args.source.read_text(encoding="utf-8"))
+        document = _load(args.source)
+
+        if args.command == "validate":
+            result = compile_semantics(document)
+            if not result.ok or result.ir is None:
+                for diagnostic in result.diagnostics:
+                    print(f"omni: {diagnostic.severity.value}: {diagnostic.message}", file=sys.stderr)
+                return 2
+            print("valid")
+            return 0
+
         if args.command == "run":
             result = compile_semantics(document)
             if not result.ok or result.ir is None:
@@ -46,11 +66,13 @@ def main(argv: list[str] | None = None) -> int:
             output = execute_module(result.ir, entry, values)
             print(json.dumps(output, ensure_ascii=False))
             return 0
+
         if args.command == "emit-c":
             module = lower_to_ir(document)
             args.output.write_bytes(emit_c(module, TargetDescriptor("portable-c")))
             return 0
-    except (OSError, ValueError, KeyError, EmitterError, OmniError) as exc:
+
+    except (OSError, ValueError, KeyError, EmitterError, OmniError, json.JSONDecodeError) as exc:
         print(f"omni: error: {exc}", file=sys.stderr)
         return 2
     return 2
