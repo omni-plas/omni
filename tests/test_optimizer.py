@@ -11,11 +11,33 @@ def test_constant_folding_reduces_arithmetic():
         Operation("add", inputs=("a", "b"), outputs=("sum",)),
         Operation("return", inputs=("sum",)),
     )),))
-    result = optimize_module(ModuleIR("fold", {}, (fn,)))
-    ops = result.functions[0].blocks[0].operations
-    assert ops[-2].opcode == "const"
-    assert ops[-2].attributes["value"] == 42
+    ops = optimize_module(ModuleIR("fold", {}, (fn,))).functions[0].blocks[0].operations
+    assert ops[-2].opcode == "const" and ops[-2].attributes["value"] == 42
     assert ops[-1].opcode == "return"
+
+
+def test_constant_folding_supports_sub_and_mul():
+    integer = TypeRef(TypeKind.INTEGER)
+    fn = FunctionIR("main", {}, integer, (BasicBlock("entry", (
+        Operation("const", outputs=("a",), attributes={"value": 10}),
+        Operation("const", outputs=("b",), attributes={"value": 3}),
+        Operation("sub", inputs=("a", "b"), outputs=("sub",)),
+        Operation("const", outputs=("c",), attributes={"value": 4}),
+        Operation("mul", inputs=("sub", "c"), outputs=("product",)),
+        Operation("return", inputs=("product",)),
+    )),))
+    ops = optimize_module(ModuleIR("fold", {}, (fn,))).functions[0].blocks[0].operations
+    assert ops[-2].attributes["value"] == 28
+
+
+def test_identity_alias_is_propagated():
+    integer = TypeRef(TypeKind.INTEGER)
+    fn = FunctionIR("main", {"x": integer}, integer, (BasicBlock("entry", (
+        Operation("identity", inputs=("x",), outputs=("alias",)),
+        Operation("return", inputs=("alias",)),
+    )),))
+    ops = optimize_module(ModuleIR("identity", {}, (fn,))).functions[0].blocks[0].operations
+    assert ops[-1].inputs == ("x",)
 
 
 def test_unreachable_block_is_removed():
