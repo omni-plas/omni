@@ -35,13 +35,41 @@ class TypeRef:
     metadata: Mapping[str, Any] = field(default_factory=dict)
 
     def validate(self) -> None:
+        if self.name is not None and (not isinstance(self.name, str) or not self.name.strip()):
+            raise ValueError("type name cannot be empty")
         if self.kind in {TypeKind.STRUCT} and not self.fields and not self.name:
             raise ValueError("struct type requires fields or a name")
         if self.kind in {TypeKind.ARRAY, TypeKind.POINTER, TypeKind.RESOURCE} and not self.parameters:
             raise ValueError(f"{self.kind.value} type requires a parameter")
+        if self.kind == TypeKind.MAP and len(self.parameters) != 2:
+            raise ValueError("map type requires key and value parameters")
         if self.kind == TypeKind.FUNCTION and len(self.parameters) < 1:
             raise ValueError("function type requires at least a return type")
+        if self.kind == TypeKind.VOID and (self.parameters or self.fields):
+            raise ValueError("void type cannot have parameters or fields")
         for parameter in self.parameters:
             parameter.validate()
-        for field_type in self.fields.values():
+        for field_name, field_type in self.fields.items():
+            if not isinstance(field_name, str) or not field_name.strip():
+                raise ValueError("struct field names cannot be empty")
             field_type.validate()
+
+    def signature(self) -> str:
+        """Return a stable structural signature useful for caches and diagnostics."""
+        parts = [self.kind.value]
+        if self.name:
+            parts.append(f"name={self.name}")
+        if self.nullable:
+            parts.append("nullable")
+        if self.parameters:
+            parts.append("params=" + ",".join(parameter.signature() for parameter in self.parameters))
+        if self.fields:
+            fields = ",".join(f"{name}:{self.fields[name].signature()}" for name in sorted(self.fields))
+            parts.append(f"fields={fields}")
+        return "<" + ";".join(parts) + ">"
+
+    def is_numeric(self) -> bool:
+        return self.kind in {TypeKind.INTEGER, TypeKind.FLOAT}
+
+    def is_scalar(self) -> bool:
+        return self.kind in {TypeKind.BOOL, TypeKind.INTEGER, TypeKind.FLOAT, TypeKind.STRING, TypeKind.BYTES}
