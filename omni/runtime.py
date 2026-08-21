@@ -35,9 +35,14 @@ def _execute_operation(operation: Operation, env: dict[str, Any]) -> Any:
             result = args[0] / args[1]
         env[operation.outputs[0]] = result
         return None
-    if opcode == "cmp_eq": env[operation.outputs[0]] = args[0] == args[1]; return None
-    if opcode == "cmp_lt": env[operation.outputs[0]] = args[0] < args[1]; return None
-    if opcode == "cmp_ge": env[operation.outputs[0]] = args[0] >= args[1]; return None
+    if opcode in {"cmp_eq", "cmp_lt", "cmp_ge", "cmp_le", "cmp_gt", "cmp_ne"}:
+        comparisons = {
+            "cmp_eq": args[0] == args[1], "cmp_lt": args[0] < args[1],
+            "cmp_ge": args[0] >= args[1], "cmp_le": args[0] <= args[1],
+            "cmp_gt": args[0] > args[1], "cmp_ne": args[0] != args[1],
+        }
+        env[operation.outputs[0]] = comparisons[opcode]
+        return None
     if opcode == "and": env[operation.outputs[0]] = bool(args[0]) and bool(args[1]); return None
     if opcode == "or": env[operation.outputs[0]] = bool(args[0]) or bool(args[1]); return None
     if opcode == "not": env[operation.outputs[0]] = not bool(args[0]); return None
