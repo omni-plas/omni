@@ -27,25 +27,32 @@ def _execute_operation(operation: Operation, env: dict[str, Any]) -> Any:
         env[operation.outputs[0]] = attrs["value"]
         return None
     if opcode in {"add", "sub", "mul", "div"}:
-        if opcode == "add":
-            result = args[0] + args[1]
-        elif opcode == "sub":
-            result = args[0] - args[1]
-        elif opcode == "mul":
-            result = args[0] * args[1]
+        if opcode == "add": result = args[0] + args[1]
+        elif opcode == "sub": result = args[0] - args[1]
+        elif opcode == "mul": result = args[0] * args[1]
         else:
-            if args[1] == 0:
-                raise RuntimeErrorBase("division by zero")
+            if args[1] == 0: raise RuntimeErrorBase("division by zero")
             result = args[0] / args[1]
         env[operation.outputs[0]] = result
         return None
-    if opcode == "return":
-        return args[0] if args else None
+    if opcode in {"cmp_eq", "cmp_lt", "cmp_ge", "cmp_le", "cmp_gt", "cmp_ne"}:
+        comparisons = {
+            "cmp_eq": args[0] == args[1], "cmp_lt": args[0] < args[1],
+            "cmp_ge": args[0] >= args[1], "cmp_le": args[0] <= args[1],
+            "cmp_gt": args[0] > args[1], "cmp_ne": args[0] != args[1],
+        }
+        env[operation.outputs[0]] = comparisons[opcode]
+        return None
+    if opcode == "and": env[operation.outputs[0]] = bool(args[0]) and bool(args[1]); return None
+    if opcode == "or": env[operation.outputs[0]] = bool(args[0]) or bool(args[1]); return None
+    if opcode == "not": env[operation.outputs[0]] = not bool(args[0]); return None
+    if opcode == "branch": return attrs["true"] if bool(args[0]) else attrs["false"]
+    if opcode == "return": return args[0] if args else None
     raise RuntimeErrorBase(f"unsupported operation: {opcode}")
 
 
 def execute(function: FunctionIR, arguments: dict[str, Any] | None = None) -> Any:
-    """Execute a semantically validated FunctionIR using the reference runtime."""
+    """Execute a semantically validated FunctionIR with conditional control flow."""
     try:
         validate_function(function)
     except SemanticValidationError as exc:
@@ -53,26 +60,25 @@ def execute(function: FunctionIR, arguments: dict[str, Any] | None = None) -> An
 
     env = dict(arguments or {})
     for name in function.parameters:
-        if name not in env:
-            raise RuntimeErrorBase(f"missing argument: {name}")
+        if name not in env: raise RuntimeErrorBase(f"missing argument: {name}")
 
     blocks = {block.name: block for block in function.blocks}
     current = function.blocks[0].name
-    visited = 0
+    steps = 0
     while True:
-        visited += 1
-        if visited > 100_000:
-            raise RuntimeErrorBase("execution step limit exceeded")
+        steps += 1
+        if steps > 100_000: raise RuntimeErrorBase("execution step limit exceeded")
         block = blocks[current]
         for operation in block.operations:
             result = _execute_operation(operation, env)
-            if operation.opcode == "return":
-                return result
-        if not block.successors:
-            raise RuntimeErrorBase(f"function ended without return: {function.name}")
-        if len(block.successors) != 1:
-            raise RuntimeErrorBase("reference runtime requires one successor per block")
-        current = block.successors[0]
+            if operation.opcode == "return": return result
+            if operation.opcode == "branch":
+                current = result
+                break
+        else:
+            if not block.successors: raise RuntimeErrorBase(f"function ended without return: {function.name}")
+            if len(block.successors) != 1: raise RuntimeErrorBase("non-branch block requires one successor")
+            current = block.successors[0]
 
 
 def execute_module(module: ModuleIR, entry: str, arguments: dict[str, Any] | None = None) -> Any:
@@ -82,6 +88,5 @@ def execute_module(module: ModuleIR, entry: str, arguments: dict[str, Any] | Non
     except SemanticValidationError as exc:
         raise RuntimeErrorBase(str(exc)) from exc
     for function in module.functions:
-        if function.name == entry:
-            return execute(function, arguments)
+        if function.name == entry: return execute(function, arguments)
     raise RuntimeErrorBase(f"entry function not found: {entry}")

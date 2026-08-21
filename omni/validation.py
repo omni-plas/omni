@@ -9,7 +9,16 @@ class SemanticValidationError(ValueError):
     """Raised when executable semantic IR violates its data-flow contract."""
 
 
-SUPPORTED_REFERENCE_OPCODES = frozenset({"const", "add", "sub", "mul", "div", "return"})
+SUPPORTED_REFERENCE_OPCODES = frozenset({
+    "const", "add", "sub", "mul", "div",
+    "cmp_eq", "cmp_lt", "cmp_ge", "cmp_le", "cmp_gt", "cmp_ne",
+    "and", "or", "not", "branch", "return",
+})
+_TERMINATORS = frozenset({"branch", "return"})
+_BINARY_OPS = frozenset({
+    "add", "sub", "mul", "div", "cmp_eq", "cmp_lt", "cmp_ge",
+    "cmp_le", "cmp_gt", "cmp_ne", "and", "or",
+})
 
 
 def validate_function(function: FunctionIR) -> None:
@@ -17,11 +26,12 @@ def validate_function(function: FunctionIR) -> None:
     return_seen = False
 
     for block in function.blocks:
+        block_terminated = False
         for operation in block.operations:
             if operation.opcode not in SUPPORTED_REFERENCE_OPCODES:
                 raise SemanticValidationError(f"unsupported reference opcode: {operation.opcode}")
-            if return_seen:
-                raise SemanticValidationError("operations are not allowed after return")
+            if block_terminated:
+                raise SemanticValidationError("operations are not allowed after a terminator")
             for name in operation.inputs:
                 if name not in defined:
                     raise SemanticValidationError(f"operation uses undefined value: {name}")
@@ -29,10 +39,39 @@ def validate_function(function: FunctionIR) -> None:
                 if name in defined:
                     raise SemanticValidationError(f"operation redefines value: {name}")
                 defined.add(name)
-            if operation.opcode == "const" and "value" not in operation.attributes:
-                raise SemanticValidationError("const requires a value attribute")
-            if operation.opcode == "return":
-                return_seen = True
+
+            if operation.opcode == "const":
+                if len(operation.outputs) != 1 or operation.inputs or "value" not in operation.attributes:
+                    raise SemanticValidationError("const requires one output, no inputs, and a value")
+            elif operation.opcode in _BINARY_OPS:
+                if len(operation.inputs) != 2 or len(operation.outputs) != 1:
+                    raise SemanticValidationError(f"{operation.opcode} requires two inputs and one output")
+            elif operation.opcode == "not":
+                if len(operation.inputs) != 1 or len(operation.outputs) != 1:
+                    raise SemanticValidationError("not requires one input and one output")
+            elif operation.opcode == "return":
+                if len(operation.inputs) > 1 or operation.outputs:
+                    raise SemanticValidationError("return accepts at most one input and no outputs")
+            elif operation.opcode == "branch":
+                if len(operation.inputs) != 1 or operation.outputs:
+                    raise SemanticValidationError("branch requires one condition input and no outputs")
+                if set(operation.attributes) != {"true", "false"}:
+                    raise SemanticValidationError("branch requires true and false targets")
+                if not all(isinstance(operation.attributes[key], str) and operation.attributes[key].strip() for key in ("true", "false")):
+                    raise SemanticValidationError("branch targets must be non-empty strings")
+
+            if operation.opcode in _TERMINATORS:
+                block_terminated = True
+
+        if block_terminated and block.operations[-1].opcode == "branch":
+            branch = block.operations[-1]
+            if len(block.successors) != 2:
+                raise SemanticValidationError("branch block requires exactly two successors")
+            expected = {branch.attributes["true"], branch.attributes["false"]}
+            if set(block.successors) != expected:
+                raise SemanticValidationError("branch successors must match branch targets")
+        elif block_terminated and block.operations[-1].opcode == "return":
+            return_seen = True
 
     if not return_seen:
         raise SemanticValidationError(f"function has no return: {function.name}")
