@@ -65,3 +65,21 @@ def test_reference_runtime_rejects_division_by_zero():
     )),))
     with pytest.raises(RuntimeErrorBase, match="division by zero"):
         execute(function, {"x": 1, "y": 0})
+
+
+def test_reference_runtime_rejects_malformed_const():
+    integer = TypeRef(TypeKind.INTEGER)
+    function = FunctionIR("main", {}, integer, (BasicBlock("entry", (
+        Operation("const", outputs=()), Operation("return"),
+    )),))
+    with pytest.raises(RuntimeErrorBase, match="const requires"):
+        execute(function)
+
+
+def test_reference_runtime_rejects_malformed_branch():
+    boolean = TypeRef(TypeKind.BOOL)
+    function = FunctionIR("main", {"x": boolean}, boolean, (BasicBlock("entry", (
+        Operation("branch", inputs=("x",), attributes={"true": "only"}),
+    ), ("only",)), BasicBlock("only", (Operation("return", inputs=("x",)),))))
+    with pytest.raises(RuntimeErrorBase, match="branch requires true and false"):
+        execute(function, {"x": True})
