@@ -13,6 +13,7 @@ from .lower import lower_to_ir
 from .optimize import optimize_module
 from .typecheck import check_module
 from .uir import UIR, validate_uir
+from .validation import SemanticValidationError, validate_module
 
 
 @dataclass(frozen=True)
@@ -27,7 +28,7 @@ class CompilationResult:
 
 
 def compile_semantics(document: Mapping[str, Any] | UIR) -> CompilationResult:
-    """Validate, plan, lower, type-check, and optimize a semantic program."""
+    """Validate, plan, lower, type-check, semantically validate, and optimize."""
     try:
         uir = document if isinstance(document, UIR) else validate_uir(document)
         plan = plan_compilation(uir)
@@ -45,4 +46,11 @@ def compile_semantics(document: Mapping[str, Any] | UIR) -> CompilationResult:
         ))
     if diagnostics:
         return CompilationResult(plan=plan, ir=ir, diagnostics=tuple(diagnostics))
+
+    try:
+        validate_module(ir)
+    except SemanticValidationError as exc:
+        diagnostics.append(Diagnostic(code="SEMANTIC_IR", severity=Severity.ERROR, message=str(exc), path=None))
+        return CompilationResult(plan=plan, ir=ir, diagnostics=tuple(diagnostics))
+
     return CompilationResult(plan=plan, ir=optimize_module(ir), diagnostics=())
