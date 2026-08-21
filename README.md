@@ -1,64 +1,60 @@
 # Omni
 
-Omni is an open-ended digital creation and semantic compilation engine. It is designed around two goals: **create any digital thing**—including kinds that do not yet exist—and **compile source programs across languages and targets**, including future language and platform identifiers, through explicit extensible capabilities.
+Omni is an independent, open-world digital creation and semantic compilation engine. Its long-term goal is to let Omni itself construct digital entities and compile source programs across languages, targets, and future-defined contracts without making another language compiler a fundamental dependency.
 
-The repository implements the architecture defined by [`SPEC.md`](./SPEC.md): formal UIR, semantic analysis, lowering to executable IR, extensible source/target contracts, deterministic artifacts, a reference runtime, and a concrete C99 emitter for the currently supported portable IR subset.
+The repository implements the architecture defined by [`SPEC.md`](./SPEC.md): formal UIR, semantic analysis, lowering to executable IR, extensible source/target contracts, deterministic artifacts, a reference runtime, and concrete materializers for supported subsets.
 
-## Vision
-
-Omni treats digital creation and compilation as open-world problems. Applications, services, games, APIs, simulations, data products, and future artifact kinds can share the same extensible construction model. Languages, platforms, architectures, ABIs, and execution models are identifiers and contracts rather than a closed enum.
-
-An unknown future concept can therefore be modeled, validated, and carried through the semantic pipeline. Actual materialization remains capability-driven: if no installed implementation can realize a requested semantics, Omni reports that capability gap instead of fabricating a successful artifact.
-
-## Architecture
+## Core model
 
 ```text
-Concept / Blueprint / Source
-          |
-          v
-       UIR + validation
-          |
-          v
-   Digital specification
-          |
-          v
-   Semantic model + checks
-          |
-          v
-      Semantic IR
-       /       \
-      v         v
- Reference    Frontend/Backend plugins
- runtime      + concrete emitters
-      |         |
-      +----+----+
-           v
-        Artifact
+Digital Entity / Source / Blueprint
+                |
+                v
+          UIR + validation
+                |
+                v
+       Semantic requirements
+                |
+                v
+          Semantic IR
+          /          \
+         v            v
+   Reference       Backends /
+    runtime        materializers
+         \            /
+          +----------+
+                |
+                v
+             Artifact
 ```
 
-## Implemented foundation
+Omni deliberately uses an **open-world** model. Languages, operating systems, CPUs, ABIs, runtimes, libraries, plugins, formats, and artifact kinds are represented through extensible identifiers and contracts rather than a closed list. A future concept can therefore be modeled and validated today. Actual execution or materialization remains capability-driven: when a concrete implementation is unavailable, Omni reports the missing capability instead of fabricating success.
 
-- Strict, extensible UIR validation.
-- Open-world digital artifact specifications and construction planning.
+## Current foundation
+
+- Strict UIR validation and canonical serialization.
+- Open-world digital-entity specifications and construction planning.
 - Semantic requirements for types, control/data flow, memory, ownership/lifetime, concurrency, errors, I/O, dependencies, security, performance, and execution.
-- Semantic IR with validation and lowering from UIR.
-- Structural type checking and diagnostics.
-- Deterministic canonical serialization and build manifests.
-- Reference execution runtime for the portable arithmetic IR subset.
-- Source frontend and target backend protocols plus an open-world plugin registry.
-- Formal digital-entity model and materialization contract.
-- Content-addressed artifact manifests using SHA-256.
-- Concrete C99 emission for the supported portable IR subset; unsupported operations fail explicitly.
-- CLI execution of UIR programs.
+- Semantic IR lowering, type checking, semantic validation, and deterministic optimization.
+- Reference runtime for the portable arithmetic/control-flow IR subset.
+- Extensible source frontend and target backend contracts.
+- Digital-entity materialization contracts and content-addressed artifact manifests.
+- Concrete C99 emission for the currently representable portable IR subset.
+- Terminal commands for validation, execution, and C emission.
 - Automated tests and GitHub Actions CI.
 
-## Development
-
-Requires Python 3.11+.
+## CLI
 
 ```bash
 python -m pip install -e .
+omni validate program.json
+omni run program.json --args '{"x": 41}'
+omni emit-c program.json program.c
 python -m pytest -q
 ```
 
-Omni does not pretend that a closed implementation can magically execute on a future machine or compile an arbitrary future language without an implementation boundary. The architecture instead makes future languages, targets, and digital artifact kinds representable while requiring concrete frontends/backends/runtime capabilities for actual realization.
+Requires Python 3.11+.
+
+## Long-term direction
+
+The reference implementation is intentionally honest about capability boundaries. Omni can represent a future language or target without pretending that an absent frontend, backend, runtime, ABI, or specification is already implemented. The roadmap is to progressively replace reference implementations with native Omni implementations and ultimately reach genuine self-hosting.
