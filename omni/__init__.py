@@ -4,6 +4,7 @@ from .artifacts import ArtifactManifest, manifest
 from .backends import Artifact, Backend, emit_with_backend
 from .capabilities import CapabilityGap, CapabilityReport, match
 from .capability import CapabilityRequirement, evaluate_capabilities
+from .compiler import CompilationError, CompilationPlan, plan_compilation
 from .construct import ConstructionPlan, plan_construction
 from .creation import CreationPlan, CreationStep, plan_creation
 from .diagnostics import Diagnostic, Severity, format_diagnostics
@@ -36,14 +37,14 @@ from .validation_report import ValidationReport, report
 
 __all__ = [
     "Artifact", "ArtifactManifest", "Backend", "BackendError", "BasicBlock", "CapabilityError", "CapabilityGap",
-    "CapabilityReport", "CapabilityRequirement", "CompilationResult", "ConstructionPlan", "CreationPlan", "CreationStep",
-    "Diagnostic", "DigitalSpec", "EmitterError", "EntitySpec", "Frontend", "FrontendRegistry", "FunctionIR", "LoweringError",
-    "MaterializedArtifact", "Materializer", "ModuleIR", "OmniError", "OmniKeyword", "OmniProgram", "Operation",
-    "PluginRegistry", "RuntimeErrorBase", "SemanticModel", "SemanticValidationError", "SerializationError", "Severity",
-    "SourceNode", "SourceSpan", "SourceUnit", "TargetDescriptor", "TargetMatch", "TargetModel", "TargetResolutionError",
-    "Token", "TypeDiagnostic", "TypeKind", "TypeRef", "UIR", "UIRValidationError", "ValidationError", "ValidationReport", "Value",
+    "CapabilityReport", "CapabilityRequirement", "CompilationError", "CompilationPlan", "CompilationResult", "ConstructionPlan",
+    "CreationPlan", "CreationStep", "Diagnostic", "DigitalSpec", "EmitterError", "EntitySpec", "Frontend", "FrontendRegistry",
+    "FunctionIR", "LoweringError", "MaterializedArtifact", "Materializer", "ModuleIR", "OmniError", "OmniKeyword", "OmniProgram",
+    "Operation", "PluginRegistry", "RuntimeErrorBase", "SemanticModel", "SemanticValidationError", "SerializationError", "Severity",
+    "SourceNode", "SourceSpan", "SourceUnit", "TargetDescriptor", "TargetMatch", "TargetModel", "TargetResolutionError", "Token",
+    "TypeDiagnostic", "TypeKind", "TypeRef", "UIR", "UIRValidationError", "ValidationError", "ValidationReport", "Value",
     "check_module", "compile_semantics", "dumps_uir", "emit_c", "emit_with_backend", "entity_from_mapping", "evaluate_capabilities",
     "execute", "execute_module", "format_diagnostics", "is_valid", "loads_uir", "lower_to_ir", "manifest", "match", "optimize_module",
-    "plan_construction", "plan_creation", "report", "resolve_target", "tokenize", "validate_materialized_artifact", "validate_function",
-    "validate_module", "validate_uir",
+    "plan_compilation", "plan_construction", "plan_creation", "report", "resolve_target", "tokenize", "validate_materialized_artifact",
+    "validate_function", "validate_module", "validate_uir",
 ]
