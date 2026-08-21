@@ -1,6 +1,6 @@
 import pytest
 
-from omni.installer import InstallationError, InstallerKind, plan_installation
+from omni.installer import InstallationError, InstallationPlan, InstallerKind, plan_installation
 from omni.targets import TargetDescriptor
 
 
@@ -35,3 +35,18 @@ def test_package_kind_cannot_be_marked_bootable():
 def test_installer_metadata_is_optional_and_open_world():
     plan = plan_installation(TargetDescriptor("future-os"), artifact_format="pkg", metadata={"future-feature": "enabled"})
     assert plan.metadata["future-feature"] == "enabled"
+
+
+def test_installation_plan_can_accumulate_build_artifacts():
+    plan = plan_installation(TargetDescriptor("os"), artifact_format="image")
+    enriched = plan.with_artifact("kernel.bin").with_artifact("rootfs.img")
+    assert enriched.artifacts == ("kernel.bin", "rootfs.img")
+    assert plan.artifacts == ()
+
+
+def test_installation_plan_rejects_invalid_artifacts():
+    with pytest.raises(ValueError, match="artifacts"):
+        InstallationPlan(TargetDescriptor("os"), InstallerKind.PACKAGE, "pkg", artifacts=("",))
+    plan = plan_installation(TargetDescriptor("os"), artifact_format="pkg")
+    with pytest.raises(ValueError, match="artifact"):
+        plan.with_artifact(" ")
