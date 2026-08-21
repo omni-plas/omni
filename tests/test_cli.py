@@ -32,8 +32,15 @@ def test_cli_runs_uir_file(tmp_path, capsys):
     assert capsys.readouterr().out.strip() == "42"
 
 
+def test_cli_validates_without_execution(tmp_path, capsys):
+    path = tmp_path / "program.json"
+    path.write_text(json.dumps(_document()), encoding="utf-8")
+    assert main(["validate", str(path)]) == 0
+    assert capsys.readouterr().out.strip() == "valid"
+
+
 def test_cli_reports_invalid_program(tmp_path, capsys):
     path = tmp_path / "invalid.json"
     path.write_text("{}", encoding="utf-8")
-    assert main(["run", str(path)]) == 2
+    assert main(["validate", str(path)]) == 2
     assert "omni: error:" in capsys.readouterr().err
