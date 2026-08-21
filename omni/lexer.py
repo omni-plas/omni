@@ -12,6 +12,12 @@ class Token:
     start: int
     end: int
 
+    def __post_init__(self) -> None:
+        if self.start < 0 or self.end < self.start:
+            raise ValueError("token source span is invalid")
+        if self.end == self.start:
+            raise ValueError("token source span cannot be empty")
+
 
 def tokenize(source: str) -> tuple[Token, ...]:
     """Tokenize universal punctuation, identifiers, numbers and strings.
@@ -19,6 +25,8 @@ def tokenize(source: str) -> tuple[Token, ...]:
     Language-specific frontends may layer their own keyword and grammar rules
     on these stable source spans; Omni never invokes an external compiler.
     """
+    if not isinstance(source, str):
+        raise TypeError("source must be text")
     tokens: list[Token] = []
     i = 0
     while i < len(source):
