@@ -10,11 +10,15 @@ class SemanticValidationError(ValueError):
 
 
 SUPPORTED_REFERENCE_OPCODES = frozenset({
-    "const", "add", "sub", "mul", "div", "cmp_eq", "cmp_lt", "cmp_ge",
+    "const", "add", "sub", "mul", "div",
+    "cmp_eq", "cmp_lt", "cmp_ge", "cmp_le", "cmp_gt", "cmp_ne",
     "and", "or", "not", "branch", "return",
 })
 _TERMINATORS = frozenset({"branch", "return"})
-_BINARY_OPS = frozenset({"add", "sub", "mul", "div", "cmp_eq", "cmp_lt", "cmp_ge", "and", "or"})
+_BINARY_OPS = frozenset({
+    "add", "sub", "mul", "div", "cmp_eq", "cmp_lt", "cmp_ge",
+    "cmp_le", "cmp_gt", "cmp_ne", "and", "or",
+})
 
 
 def validate_function(function: FunctionIR) -> None:
@@ -36,17 +40,21 @@ def validate_function(function: FunctionIR) -> None:
                     raise SemanticValidationError(f"operation redefines value: {name}")
                 defined.add(name)
 
-            if operation.opcode == "const" and (len(operation.outputs) != 1 or "value" not in operation.attributes):
-                raise SemanticValidationError("const requires one output and a value")
-            if operation.opcode in _BINARY_OPS and (len(operation.inputs) != 2 or len(operation.outputs) != 1):
-                raise SemanticValidationError(f"{operation.opcode} requires two inputs and one output")
-            if operation.opcode == "not" and (len(operation.inputs) != 1 or len(operation.outputs) != 1):
-                raise SemanticValidationError("not requires one input and one output")
-            if operation.opcode == "return" and len(operation.inputs) > 1:
-                raise SemanticValidationError("return accepts at most one input")
-            if operation.opcode == "branch":
-                if len(operation.inputs) != 1:
-                    raise SemanticValidationError("branch requires one condition input")
+            if operation.opcode == "const":
+                if len(operation.outputs) != 1 or operation.inputs or "value" not in operation.attributes:
+                    raise SemanticValidationError("const requires one output, no inputs, and a value")
+            elif operation.opcode in _BINARY_OPS:
+                if len(operation.inputs) != 2 or len(operation.outputs) != 1:
+                    raise SemanticValidationError(f"{operation.opcode} requires two inputs and one output")
+            elif operation.opcode == "not":
+                if len(operation.inputs) != 1 or len(operation.outputs) != 1:
+                    raise SemanticValidationError("not requires one input and one output")
+            elif operation.opcode == "return":
+                if len(operation.inputs) > 1 or operation.outputs:
+                    raise SemanticValidationError("return accepts at most one input and no outputs")
+            elif operation.opcode == "branch":
+                if len(operation.inputs) != 1 or operation.outputs:
+                    raise SemanticValidationError("branch requires one condition input and no outputs")
                 if set(operation.attributes) != {"true", "false"}:
                     raise SemanticValidationError("branch requires true and false targets")
                 if not all(isinstance(operation.attributes[key], str) and operation.attributes[key].strip() for key in ("true", "false")):
@@ -56,9 +64,10 @@ def validate_function(function: FunctionIR) -> None:
                 block_terminated = True
 
         if block_terminated and block.operations[-1].opcode == "branch":
+            branch = block.operations[-1]
             if len(block.successors) != 2:
                 raise SemanticValidationError("branch block requires exactly two successors")
-            expected = {block.operations[-1].attributes["true"], block.operations[-1].attributes["false"]}
+            expected = {branch.attributes["true"], branch.attributes["false"]}
             if set(block.successors) != expected:
                 raise SemanticValidationError("branch successors must match branch targets")
         elif block_terminated and block.operations[-1].opcode == "return":
