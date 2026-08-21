@@ -41,6 +41,8 @@ Omni deliberately uses an **open-world** model. Languages, operating systems, CP
 - Digital-entity materialization contracts and content-addressed artifact manifests.
 - Concrete C99 emission for the currently representable portable IR subset.
 - Terminal commands for validation, execution, and C emission.
+- Structured source-location diagnostics for compiler/tooling consumers.
+- Explicit target capability requirements for open-world targets.
 - Automated tests and GitHub Actions CI.
 
 ## CLI
@@ -54,6 +56,10 @@ python -m pytest -q
 ```
 
 Requires Python 3.11+.
+
+## Capability model
+
+Target descriptions are not restricted to known operating systems or CPUs. A target may carry arbitrary capability contracts and can be extended without mutating the original descriptor. Backends can require a capability and fail deterministically when it is unavailable.
 
 ## Long-term direction
 
