@@ -25,6 +25,8 @@ class TargetDescriptor:
             raise TypeError("target capabilities must be a mapping")
         if any(not isinstance(k, str) or not k.strip() for k in self.capabilities):
             raise ValueError("target capability names must be non-empty strings")
+        if any(isinstance(v, str) and not v.strip() for v in self.capabilities.values()):
+            raise ValueError("target capability values cannot be empty strings")
 
     def identity(self) -> str:
         return "-".join(p for p in (self.platform, self.architecture, self.abi) if p)
