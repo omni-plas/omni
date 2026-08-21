@@ -39,13 +39,21 @@ def _execute_operation(operation: Operation, env: dict[str, Any]) -> Any:
             result = args[0] / args[1]
         env[operation.outputs[0]] = result
         return None
+    if opcode == "cmp_eq":
+        env[operation.outputs[0]] = args[0] == args[1]
+        return None
+    if opcode == "cmp_lt":
+        env[operation.outputs[0]] = args[0] < args[1]
+        return None
+    if opcode == "branch":
+        return attrs["true"] if args[0] else attrs["false"]
     if opcode == "return":
         return args[0] if args else None
     raise RuntimeErrorBase(f"unsupported operation: {opcode}")
 
 
 def execute(function: FunctionIR, arguments: dict[str, Any] | None = None) -> Any:
-    """Execute a semantically validated FunctionIR using the reference runtime."""
+    """Execute a semantically validated FunctionIR, including conditional control flow."""
     try:
         validate_function(function)
     except SemanticValidationError as exc:
@@ -58,21 +66,25 @@ def execute(function: FunctionIR, arguments: dict[str, Any] | None = None) -> An
 
     blocks = {block.name: block for block in function.blocks}
     current = function.blocks[0].name
-    visited = 0
+    steps = 0
     while True:
-        visited += 1
-        if visited > 100_000:
+        steps += 1
+        if steps > 100_000:
             raise RuntimeErrorBase("execution step limit exceeded")
         block = blocks[current]
         for operation in block.operations:
             result = _execute_operation(operation, env)
             if operation.opcode == "return":
                 return result
-        if not block.successors:
-            raise RuntimeErrorBase(f"function ended without return: {function.name}")
-        if len(block.successors) != 1:
-            raise RuntimeErrorBase("reference runtime requires one successor per block")
-        current = block.successors[0]
+            if operation.opcode == "branch":
+                current = result
+                break
+        else:
+            if not block.successors:
+                raise RuntimeErrorBase(f"function ended without return: {function.name}")
+            if len(block.successors) != 1:
+                raise RuntimeErrorBase("non-branch block requires one successor")
+            current = block.successors[0]
 
 
 def execute_module(module: ModuleIR, entry: str, arguments: dict[str, Any] | None = None) -> Any:
