@@ -8,17 +8,9 @@ def _base(functions):
         "source": {"language": "future-language"},
         "target": {"platform": "future-os", "architecture": "future-cpu"},
         "semantics": {
-            "program": {"entry": "main"},
-            "types": {},
-            "control_flow": {},
-            "data_flow": {},
-            "memory_model": {},
-            "error_handling": {},
-            "io": {},
-            "dependencies": [],
-            "security": {},
-            "performance": {},
-            "functions": functions,
+            "program": {"entry": "main"}, "types": {}, "control_flow": {}, "data_flow": {},
+            "memory_model": {}, "error_handling": {}, "io": {}, "dependencies": [],
+            "security": {}, "performance": {}, "functions": functions,
         },
     }
 
@@ -33,9 +25,16 @@ def test_pipeline_produces_validated_ir():
 
 def test_pipeline_surfaces_undefined_ir_values():
     result = compile_semantics(_base([{
-        "name": "main",
-        "result": "void",
-        "operations": [{"opcode": "use", "inputs": ["missing"]}],
+        "name": "main", "result": "void", "operations": [{"opcode": "use", "inputs": ["missing"]}],
     }]))
     assert not result.ok
     assert any(d.code == "IR002" and d.severity.value == "error" for d in result.diagnostics)
+
+
+def test_pipeline_surfaces_semantic_ir_errors():
+    result = compile_semantics(_base([{
+        "name": "main", "result": "void",
+        "operations": [{"opcode": "const", "outputs": ["x"]}, {"opcode": "return", "inputs": ["x"]}],
+    }]))
+    assert not result.ok
+    assert any(d.code == "SEMANTIC_IR" for d in result.diagnostics)
