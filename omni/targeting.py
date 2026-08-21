@@ -20,13 +20,26 @@ class TargetResolutionError(LookupError):
 
 
 def resolve_target(target: TargetDescriptor, backends: Iterable[Backend]) -> TargetMatch:
-    """Resolve a backend using its declared target capability.
+    """Resolve the first backend that declares support for a target.
 
-    Backends may expose ``supports_target``; absence means the backend is not
-    considered compatible. No operating-system or CPU list is hard-coded here.
+    Resolution is intentionally open-world: no operating-system, CPU, ABI, or
+    backend list is hard-coded. Backends may inspect arbitrary target
+    capabilities through ``supports_target``.
     """
+    if not isinstance(target, TargetDescriptor):
+        raise TypeError("target must be a TargetDescriptor")
+    if backends is None:
+        raise TypeError("backends cannot be None")
     for backend in backends:
         supports = getattr(backend, "supports_target", None)
-        if callable(supports) and bool(supports(target)):
+        if not callable(supports):
+            continue
+        try:
+            supported = bool(supports(target))
+        except Exception as exc:
+            raise TargetResolutionError(
+                f"backend {type(backend).__name__} failed while checking target {target.identity()}: {exc}"
+            ) from exc
+        if supported:
             return TargetMatch(target=target, backend=backend)
     raise TargetResolutionError(f"no backend supports target {target.identity()}")
