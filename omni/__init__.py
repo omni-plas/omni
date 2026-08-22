@@ -30,6 +30,7 @@ from .package_writer import PackageWriteError, build_package, write_package
 from .packaging import PackageError, PackageManifest
 from .pipeline import CompilationResult, compile_semantics
 from .plugins import PluginRegistry
+from .release_pipeline import ReleasePipelineError, ReleaseResult, build_release, write_release
 from .runtime import RuntimeErrorBase, execute, execute_module
 from .semantics import SemanticModel
 from .serialization import SerializationError, dumps_uir, loads_uir
@@ -50,12 +51,13 @@ __all__ = [
     "FrontendRegistry", "FilesystemMaterializationError", "FunctionIR", "InstallationError", "InstallationPlan", "InstallerBuildError",
     "InstallerBundle", "InstallerKind", "LoweringError", "MaterializedArtifact", "MaterializedFile", "Materializer", "MaterializationError",
     "MaterializationPlan", "ModuleIR", "OmniError", "OmniKeyword", "OmniProgram", "Operation", "OSBuildPlan", "OSModelError",
-    "OperatingSystemSpec", "PackageError", "PackageManifest", "PackageWriteError", "PluginRegistry", "RuntimeErrorBase", "SemanticModel",
-    "SemanticValidationError", "SerializationError", "Severity", "SourceNode", "SourceSpan", "SourceUnit", "TargetDescriptor", "TargetMatch",
-    "TargetModel", "TargetResolutionError", "Token", "TypeDiagnostic", "TypeKind", "TypeRef", "UIR", "UIRValidationError", "ValidationError",
-    "ValidationReport", "Value", "build_installer", "build_package", "check_module", "compile_semantics", "create_materialization_plan",
-    "create_os_build_plan", "dumps_uir", "emit_c", "emit_with_backend", "entity_from_mapping", "evaluate_capabilities", "execute", "execute_module",
-    "format_diagnostics", "is_valid", "loads_uir", "lower_to_ir", "manifest", "match", "materialize_to_directory", "optimize_module",
-    "plan_compilation", "plan_construction", "plan_creation", "plan_installation", "report", "resolve_target", "tokenize",
-    "validate_materialized_artifact", "validate_function", "validate_module", "validate_uir", "write_installer", "write_package",
+    "OperatingSystemSpec", "PackageError", "PackageManifest", "PackageWriteError", "PluginRegistry", "ReleasePipelineError", "ReleaseResult",
+    "RuntimeErrorBase", "SemanticModel", "SemanticValidationError", "SerializationError", "Severity", "SourceNode", "SourceSpan", "SourceUnit",
+    "TargetDescriptor", "TargetMatch", "TargetModel", "TargetResolutionError", "Token", "TypeDiagnostic", "TypeKind", "TypeRef", "UIR",
+    "UIRValidationError", "ValidationError", "ValidationReport", "Value", "build_installer", "build_package", "build_release", "check_module",
+    "compile_semantics", "create_materialization_plan", "create_os_build_plan", "dumps_uir", "emit_c", "emit_with_backend", "entity_from_mapping",
+    "evaluate_capabilities", "execute", "execute_module", "format_diagnostics", "is_valid", "loads_uir", "lower_to_ir", "manifest", "match",
+    "materialize_to_directory", "optimize_module", "plan_compilation", "plan_construction", "plan_creation", "plan_installation", "report",
+    "resolve_target", "tokenize", "validate_materialized_artifact", "validate_function", "validate_module", "validate_uir", "write_installer",
+    "write_package", "write_release",
 ]
