@@ -81,3 +81,34 @@ def test_manifest_is_canonical_and_deterministic():
 def test_render_manifest_is_human_readable_and_matches_document():
     plan = plan_installation(TargetDescriptor("historical-os"), artifact_format="legacy-package")
     assert json.loads(plan.render_manifest()) == plan.manifest_document()
+
+
+def test_manifest_round_trip_preserves_plan():
+    plan = plan_installation(
+        TargetDescriptor("future-os", "future-cpu", capabilities={"mode": "next"}),
+        kind=InstallerKind.BOOTABLE,
+        artifact_format="future-image",
+        bootable=True,
+        filesystem="future-fs",
+        artifacts=("kernel.bin",),
+        metadata={"channel": "nightly"},
+    )
+    restored = InstallationPlan.from_manifest(plan.manifest())
+    assert restored == plan
+
+
+def test_manifest_rejects_unknown_schema():
+    with pytest.raises(InstallationError, match="unsupported"):
+        InstallationPlan.from_manifest('{"schema":"omni.installation.v999"}')
+
+
+def test_manifest_rejects_tampered_identity():
+    document = plan_installation(TargetDescriptor("os"), artifact_format="pkg").manifest_document()
+    document["identity"] = "tampered"
+    with pytest.raises(InstallationError, match="identity"):
+        InstallationPlan.from_document(document)
+
+
+def test_manifest_rejects_malformed_json():
+    with pytest.raises(InstallationError, match="JSON"):
+        InstallationPlan.from_manifest("not-json")
