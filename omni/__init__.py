@@ -26,6 +26,7 @@ from .lexer import Token, tokenize
 from .lower import lower_to_ir
 from .materialize import MaterializedArtifact, Materializer, validate_materialized_artifact
 from .materializer import MaterializationError, MaterializationPlan, create_materialization_plan
+from .omni_frontend import OmniFrontend
 from .optimize import optimize_module
 from .os_model import OSModelError, OperatingSystemSpec
 from .package_writer import PackageWriteError, build_package, write_package
@@ -37,6 +38,7 @@ from .runtime import RuntimeErrorBase, execute, execute_module
 from .semantics import SemanticModel
 from .serialization import SerializationError, dumps_uir, loads_uir
 from .source_model import SourceNode, SourceSpan, SourceUnit
+from .source_pipeline import SourceCompilationResult, SourcePipelineError, compile_source
 from .target_model import TargetModel
 from .targeting import TargetMatch, TargetResolutionError, resolve_target
 from .targets import TargetDescriptor
@@ -52,12 +54,13 @@ __all__ = [
     "CompilationResult", "ConstructionPlan", "CreationPlan", "CreationStep", "Diagnostic", "DigitalSpec", "EmitterError", "EntitySpec", "Frontend",
     "FrontendRegistry", "FilesystemMaterializationError", "FunctionIR", "GenericArtifactBackend", "InstallationError", "InstallationPlan", "InstallerBuildError",
     "InstallerBundle", "InstallerKind", "LoweringError", "MaterializedArtifact", "MaterializedFile", "Materializer", "MaterializationError", "MaterializationPlan",
-    "ModuleIR", "OmniError", "OmniKeyword", "OmniProgram", "Operation", "OSBuildPlan", "OSModelError", "OperatingSystemSpec", "PackageError", "PackageManifest",
-    "PackageWriteError", "PluginRegistry", "ReleasePipelineError", "ReleaseResult", "RuntimeErrorBase", "SemanticModel", "SemanticValidationError", "SerializationError",
-    "Severity", "SourceNode", "SourceSpan", "SourceUnit", "TargetBackend", "TargetDescriptor", "TargetMatch", "TargetModel", "TargetResolutionError", "Token",
-    "TypeDiagnostic", "TypeKind", "TypeRef", "UIR", "UIRValidationError", "ValidationError", "ValidationReport", "Value", "build_installer", "build_package",
-    "build_release", "check_module", "compile_semantics", "compile_uir", "create_materialization_plan", "create_os_build_plan", "dumps_uir", "emit_c",
-    "emit_with_backend", "entity_from_mapping", "evaluate_capabilities", "execute", "execute_module", "format_diagnostics", "is_valid", "loads_uir", "lower_to_ir",
-    "manifest", "match", "materialize_to_directory", "optimize_module", "plan_compilation", "plan_construction", "plan_creation", "plan_installation", "report",
-    "resolve_target", "tokenize", "validate_materialized_artifact", "validate_function", "validate_module", "validate_uir", "write_installer", "write_package", "write_release",
+    "ModuleIR", "OmniError", "OmniFrontend", "OmniKeyword", "OmniProgram", "Operation", "OSBuildPlan", "OSModelError", "OperatingSystemSpec", "PackageError",
+    "PackageManifest", "PackageWriteError", "PluginRegistry", "ReleasePipelineError", "ReleaseResult", "RuntimeErrorBase", "SemanticModel", "SemanticValidationError",
+    "SerializationError", "Severity", "SourceCompilationResult", "SourceNode", "SourcePipelineError", "SourceSpan", "SourceUnit", "TargetBackend", "TargetDescriptor",
+    "TargetMatch", "TargetModel", "TargetResolutionError", "Token", "TypeDiagnostic", "TypeKind", "TypeRef", "UIR", "UIRValidationError", "ValidationError",
+    "ValidationReport", "Value", "build_installer", "build_package", "build_release", "check_module", "compile_semantics", "compile_source", "compile_uir",
+    "create_materialization_plan", "create_os_build_plan", "dumps_uir", "emit_c", "emit_with_backend", "entity_from_mapping", "evaluate_capabilities", "execute",
+    "execute_module", "format_diagnostics", "is_valid", "loads_uir", "lower_to_ir", "manifest", "match", "materialize_to_directory", "optimize_module",
+    "plan_compilation", "plan_construction", "plan_creation", "plan_installation", "report", "resolve_target", "tokenize", "validate_materialized_artifact",
+    "validate_function", "validate_module", "validate_uir", "write_installer", "write_package", "write_release",
 ]
