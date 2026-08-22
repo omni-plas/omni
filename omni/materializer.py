@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
-from typing import Mapping
+from typing import Any, Mapping
 
-from .artifacts import Artifact
+from .artifacts import Artifact, ArtifactManifest
 from .targets import TargetDescriptor
 
 
@@ -38,6 +39,34 @@ class MaterializationPlan:
 
     def identities(self) -> tuple[str, ...]:
         return tuple(a.identity() for a in self.artifacts)
+
+    def manifest_document(self) -> dict[str, Any]:
+        """Return a deterministic, target-bound materialization manifest."""
+        entries: list[dict[str, Any]] = []
+        for artifact in self.artifacts:
+            manifest: ArtifactManifest = artifact.manifest
+            entries.append({
+                "identity": artifact.identity(),
+                "target": artifact.target.identity(),
+                "format": manifest.format,
+                "digest": manifest.digest,
+                "size": manifest.size,
+                "name": manifest.name,
+                "kind": manifest.kind,
+            })
+        return {
+            "schema": "omni.materialization.v1",
+            "target": self.target.identity(),
+            "target_descriptor": self.target.serialize(),
+            "artifacts": entries,
+            "metadata": dict(self.metadata),
+        }
+
+    def manifest(self) -> bytes:
+        return (json.dumps(self.manifest_document(), ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
+
+    def render_manifest(self) -> str:
+        return json.dumps(self.manifest_document(), ensure_ascii=False, sort_keys=True, indent=2) + "\n"
 
 
 def create_materialization_plan(target: TargetDescriptor, *, metadata: Mapping[str, object] | None = None) -> MaterializationPlan:
