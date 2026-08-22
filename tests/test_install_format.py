@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from omni.install_format import InstallFormat, InstallFormatError
@@ -23,3 +25,12 @@ def test_install_format_rejects_empty_version():
 def test_install_format_metadata_is_open_world():
     fmt = InstallFormat("installer", "1", TargetDescriptor("historical-os"), metadata={"legacy": True})
     assert fmt.metadata["legacy"] is True
+
+
+def test_install_format_manifest_is_deterministic():
+    fmt = InstallFormat("installer", "1", TargetDescriptor("future-os", "cpu", "abi"), bootable=True, filesystem="fs")
+    document = json.loads(fmt.manifest())
+    assert document["schema"] == "omni.install-format.v1"
+    assert document["target"]["schema"] == "omni.target.v1"
+    assert document["bootable"] is True
+    assert fmt.manifest() == fmt.manifest()
