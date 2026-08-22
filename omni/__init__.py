@@ -2,10 +2,12 @@
 
 from .artifacts import ArtifactManifest, manifest
 from .backends import Artifact, Backend, emit_with_backend
+from .backend import BackendError, BackendRegistry, BackendSelection, GenericArtifactBackend, TargetBackend
 from .build_pipeline import BuildPipelineError, OSBuildPlan, create_os_build_plan
 from .capabilities import CapabilityGap, CapabilityReport, match
 from .capability import CapabilityRequirement, evaluate_capabilities
 from .compiler import CompilationError, CompilationPlan, plan_compilation
+from .compile_engine import CompilationResult as BackendCompilationResult, compile_uir
 from .construct import ConstructionPlan, plan_construction
 from .creation import CreationPlan, CreationStep, plan_creation
 from .diagnostics import Diagnostic, Severity, format_diagnostics
@@ -13,7 +15,7 @@ from .digital import DigitalSpec
 from .emitters import EmitterError, emit_c
 from .entities import EntitySpec
 from .entity_validate import entity_from_mapping
-from .errors import BackendError, CapabilityError, LoweringError, OmniError, ValidationError
+from .errors import CapabilityError, LoweringError, OmniError, ValidationError
 from .frontend import Frontend, FrontendRegistry
 from .fs_materializer import FilesystemMaterializationError, MaterializedFile, materialize_to_directory
 from .installer import InstallationError, InstallationPlan, InstallerKind, plan_installation
@@ -45,19 +47,17 @@ from .validation import SemanticValidationError, validate_function, validate_mod
 from .validation_report import ValidationReport, report
 
 __all__ = [
-    "Artifact", "ArtifactManifest", "Backend", "BackendError", "BasicBlock", "BuildPipelineError", "CapabilityError",
-    "CapabilityGap", "CapabilityReport", "CapabilityRequirement", "CompilationError", "CompilationPlan", "CompilationResult",
-    "ConstructionPlan", "CreationPlan", "CreationStep", "Diagnostic", "DigitalSpec", "EmitterError", "EntitySpec", "Frontend",
-    "FrontendRegistry", "FilesystemMaterializationError", "FunctionIR", "InstallationError", "InstallationPlan", "InstallerBuildError",
-    "InstallerBundle", "InstallerKind", "LoweringError", "MaterializedArtifact", "MaterializedFile", "Materializer", "MaterializationError",
-    "MaterializationPlan", "ModuleIR", "OmniError", "OmniKeyword", "OmniProgram", "Operation", "OSBuildPlan", "OSModelError",
-    "OperatingSystemSpec", "PackageError", "PackageManifest", "PackageWriteError", "PluginRegistry", "ReleasePipelineError", "ReleaseResult",
-    "RuntimeErrorBase", "SemanticModel", "SemanticValidationError", "SerializationError", "Severity", "SourceNode", "SourceSpan", "SourceUnit",
-    "TargetDescriptor", "TargetMatch", "TargetModel", "TargetResolutionError", "Token", "TypeDiagnostic", "TypeKind", "TypeRef", "UIR",
-    "UIRValidationError", "ValidationError", "ValidationReport", "Value", "build_installer", "build_package", "build_release", "check_module",
-    "compile_semantics", "create_materialization_plan", "create_os_build_plan", "dumps_uir", "emit_c", "emit_with_backend", "entity_from_mapping",
-    "evaluate_capabilities", "execute", "execute_module", "format_diagnostics", "is_valid", "loads_uir", "lower_to_ir", "manifest", "match",
-    "materialize_to_directory", "optimize_module", "plan_compilation", "plan_construction", "plan_creation", "plan_installation", "report",
-    "resolve_target", "tokenize", "validate_materialized_artifact", "validate_function", "validate_module", "validate_uir", "write_installer",
-    "write_package", "write_release",
+    "Artifact", "ArtifactManifest", "Backend", "BackendCompilationResult", "BackendError", "BackendRegistry", "BackendSelection", "BasicBlock",
+    "BuildPipelineError", "CapabilityError", "CapabilityGap", "CapabilityReport", "CapabilityRequirement", "CompilationError", "CompilationPlan",
+    "CompilationResult", "ConstructionPlan", "CreationPlan", "CreationStep", "Diagnostic", "DigitalSpec", "EmitterError", "EntitySpec", "Frontend",
+    "FrontendRegistry", "FilesystemMaterializationError", "FunctionIR", "GenericArtifactBackend", "InstallationError", "InstallationPlan", "InstallerBuildError",
+    "InstallerBundle", "InstallerKind", "LoweringError", "MaterializedArtifact", "MaterializedFile", "Materializer", "MaterializationError", "MaterializationPlan",
+    "ModuleIR", "OmniError", "OmniKeyword", "OmniProgram", "Operation", "OSBuildPlan", "OSModelError", "OperatingSystemSpec", "PackageError", "PackageManifest",
+    "PackageWriteError", "PluginRegistry", "ReleasePipelineError", "ReleaseResult", "RuntimeErrorBase", "SemanticModel", "SemanticValidationError", "SerializationError",
+    "Severity", "SourceNode", "SourceSpan", "SourceUnit", "TargetBackend", "TargetDescriptor", "TargetMatch", "TargetModel", "TargetResolutionError", "Token",
+    "TypeDiagnostic", "TypeKind", "TypeRef", "UIR", "UIRValidationError", "ValidationError", "ValidationReport", "Value", "build_installer", "build_package",
+    "build_release", "check_module", "compile_semantics", "compile_uir", "create_materialization_plan", "create_os_build_plan", "dumps_uir", "emit_c",
+    "emit_with_backend", "entity_from_mapping", "evaluate_capabilities", "execute", "execute_module", "format_diagnostics", "is_valid", "loads_uir", "lower_to_ir",
+    "manifest", "match", "materialize_to_directory", "optimize_module", "plan_compilation", "plan_construction", "plan_creation", "plan_installation", "report",
+    "resolve_target", "tokenize", "validate_materialized_artifact", "validate_function", "validate_module", "validate_uir", "write_installer", "write_package", "write_release",
 ]
