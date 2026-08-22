@@ -66,7 +66,7 @@ A project can enter this lifecycle at any stage. For example, existing source co
 - Digital-entity materialization contracts and content-addressed artifact manifests.
 - Target-neutral operating-system and installer planning.
 - Concrete C99 emission for the currently representable portable IR subset.
-- Terminal commands for validation, execution, and C emission.
+- Terminal commands for validation, execution, C emission, and installation-plan generation.
 - Structured source-location diagnostics for compiler/tooling consumers.
 - Explicit target capability requirements for open-world targets.
 - Automated tests and GitHub Actions CI.
@@ -84,6 +84,7 @@ python -m pip install -e .
 omni validate program.json
 omni run program.json --args '{"x": 41}'
 omni emit-c program.json program.c
+omni install-plan --target future-os --architecture future-cpu --abi future-abi --kind bootable --format future-image --bootable --filesystem future-fs
 python -m pytest -q
 ```
 
