@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Mapping
@@ -50,6 +51,8 @@ class InstallationPlan:
             raise TypeError("installer metadata must be a mapping")
         if any(not isinstance(k, str) or not k.strip() for k in self.metadata):
             raise ValueError("installer metadata keys must be non-empty strings")
+        if any(not isinstance(v, str) for v in self.metadata.values()):
+            raise ValueError("installer metadata values must be strings")
 
     def identity(self) -> str:
         return f"{self.kind.value}:{self.target.identity()}:{self.artifact_format.strip()}"
@@ -61,6 +64,26 @@ class InstallationPlan:
             self.target, self.kind, self.artifact_format, self.bootable,
             self.filesystem, self.artifacts + (artifact,), self.metadata
         )
+
+    def manifest(self) -> bytes:
+        """Serialize a deterministic installation manifest for downstream materializers."""
+        document = {
+            "schema": "omni.installation.v1",
+            "identity": self.identity(),
+            "target": {
+                "platform": self.target.platform,
+                "architecture": self.target.architecture,
+                "abi": self.target.abi,
+                "capabilities": dict(self.target.capabilities),
+            },
+            "kind": self.kind.value,
+            "artifact_format": self.artifact_format.strip(),
+            "bootable": self.bootable,
+            "filesystem": self.filesystem,
+            "artifacts": list(self.artifacts),
+            "metadata": dict(self.metadata),
+        }
+        return (json.dumps(document, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
 
 
 def plan_installation(
