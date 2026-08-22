@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
-from typing import Mapping
+from typing import Any, Mapping
 
 from .targets import TargetDescriptor
 
@@ -38,4 +39,22 @@ class InstallFormat:
             raise TypeError("install format metadata must be a mapping")
 
     def identity(self) -> str:
-        return f"{self.name}:{self.version}:{self.target.identity()}"
+        return f"{self.name.strip()}:{self.version.strip()}:{self.target.identity()}"
+
+    def manifest_document(self) -> dict[str, Any]:
+        return {
+            "schema": "omni.install-format.v1",
+            "identity": self.identity(),
+            "name": self.name.strip(),
+            "version": self.version.strip(),
+            "target": self.target.serialize(),
+            "bootable": self.bootable,
+            "filesystem": self.filesystem.strip() if self.filesystem else None,
+            "metadata": dict(self.metadata),
+        }
+
+    def manifest(self) -> bytes:
+        return (json.dumps(self.manifest_document(), ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
+
+    def render_manifest(self) -> str:
+        return json.dumps(self.manifest_document(), ensure_ascii=False, sort_keys=True, indent=2) + "\n"
