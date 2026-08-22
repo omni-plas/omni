@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Mapping
 
-from .targets import TargetDescriptor
+from .targets import TargetDescriptor, TargetError
 
 
 class InstallationError(ValueError):
@@ -62,22 +62,13 @@ class InstallationPlan:
     def with_artifact(self, artifact: str) -> "InstallationPlan":
         if not isinstance(artifact, str) or not artifact.strip():
             raise ValueError("installer artifact cannot be empty")
-        return InstallationPlan(
-            self.target, self.kind, self.artifact_format, self.bootable,
-            self.filesystem, self.artifacts + (artifact.strip(),), self.metadata
-        )
+        return InstallationPlan(self.target, self.kind, self.artifact_format, self.bootable, self.filesystem, self.artifacts + (artifact.strip(),), self.metadata)
 
     def manifest_document(self) -> dict[str, Any]:
-        """Return the canonical manifest structure consumed by materializers."""
         return {
             "schema": "omni.installation.v1",
             "identity": self.identity(),
-            "target": {
-                "platform": self.target.platform.strip(),
-                "architecture": self.target.architecture.strip() if self.target.architecture else None,
-                "abi": self.target.abi.strip() if self.target.abi else None,
-                "capabilities": dict(self.target.capabilities),
-            },
+            "target": self.target.document(),
             "kind": self.kind.value,
             "artifact_format": self.artifact_format.strip(),
             "bootable": self.bootable,
@@ -87,21 +78,13 @@ class InstallationPlan:
         }
 
     def manifest(self) -> bytes:
-        """Serialize a deterministic installation manifest for downstream materializers."""
-        return (json.dumps(
-            self.manifest_document(),
-            ensure_ascii=False,
-            sort_keys=True,
-            separators=(",", ":"),
-        ) + "\n").encode("utf-8")
+        return (json.dumps(self.manifest_document(), ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
 
     def render_manifest(self) -> str:
-        """Render the canonical manifest as human-readable JSON."""
         return json.dumps(self.manifest_document(), ensure_ascii=False, sort_keys=True, indent=2) + "\n"
 
     @classmethod
     def from_document(cls, document: Mapping[str, Any]) -> "InstallationPlan":
-        """Reconstruct and strictly validate a plan produced by ``manifest_document``."""
         if not isinstance(document, Mapping):
             raise InstallationError("installation manifest must be an object")
         if document.get("schema") != "omni.installation.v1":
@@ -110,22 +93,9 @@ class InstallationPlan:
         if not isinstance(target_data, Mapping):
             raise InstallationError("installation manifest target must be an object")
         try:
-            target = TargetDescriptor(
-                target_data["platform"],
-                target_data.get("architecture"),
-                target_data.get("abi"),
-                target_data.get("capabilities", {}),
-            )
-            plan = plan_installation(
-                target,
-                kind=InstallerKind(document["kind"]),
-                artifact_format=document["artifact_format"],
-                bootable=document["bootable"],
-                filesystem=document.get("filesystem"),
-                artifacts=tuple(document.get("artifacts", ())),
-                metadata=document.get("metadata", {}),
-            )
-        except (KeyError, TypeError, ValueError) as exc:
+            target = TargetDescriptor.from_document(target_data)
+            plan = plan_installation(target, kind=InstallerKind(document["kind"]), artifact_format=document["artifact_format"], bootable=document["bootable"], filesystem=document.get("filesystem"), artifacts=tuple(document.get("artifacts", ())), metadata=document.get("metadata", {}))
+        except (KeyError, TypeError, ValueError, TargetError) as exc:
             raise InstallationError(f"invalid installation manifest: {exc}") from exc
         if document.get("identity") != plan.identity():
             raise InstallationError("installation manifest identity does not match its contents")
@@ -133,7 +103,6 @@ class InstallationPlan:
 
     @classmethod
     def from_manifest(cls, payload: bytes | str) -> "InstallationPlan":
-        """Parse a canonical manifest and validate every field before reconstruction."""
         try:
             document = json.loads(payload.decode("utf-8") if isinstance(payload, bytes) else payload)
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -141,17 +110,7 @@ class InstallationPlan:
         return cls.from_document(document)
 
 
-def plan_installation(
-    target: TargetDescriptor,
-    *,
-    kind: InstallerKind = InstallerKind.PACKAGE,
-    artifact_format: str,
-    bootable: bool = False,
-    filesystem: str | None = None,
-    artifacts: tuple[str, ...] = (),
-    metadata: Mapping[str, str] | None = None,
-) -> InstallationPlan:
-    """Create a validated installation plan without a fixed OS catalogue."""
+def plan_installation(target: TargetDescriptor, *, kind: InstallerKind = InstallerKind.PACKAGE, artifact_format: str, bootable: bool = False, filesystem: str | None = None, artifacts: tuple[str, ...] = (), metadata: Mapping[str, str] | None = None) -> InstallationPlan:
     if kind in (InstallerKind.BOOTABLE, InstallerKind.RECOVERY) and not bootable:
         raise InstallationError(f"{kind.value} installer must be marked bootable")
     if bootable and kind == InstallerKind.PACKAGE:
