@@ -1,8 +1,4 @@
-"""Concrete filesystem materialization for Omni digital artifacts.
-
-This layer deliberately materializes into a caller-selected staging directory. It
-never executes generated content and never writes outside the requested root.
-"""
+"""Concrete filesystem materialization for Omni digital artifacts."""
 
 from __future__ import annotations
 
@@ -13,6 +9,7 @@ from pathlib import Path, PurePosixPath
 
 from .artifacts import ArtifactManifest
 from .materialize import MaterializedArtifact, validate_materialized_artifact
+from .targets import TargetDescriptor
 
 
 class FilesystemMaterializationError(ValueError):
@@ -25,7 +22,6 @@ class MaterializedFile:
     manifest: ArtifactManifest
 
 
-
 def _safe_relative_path(name: str) -> PurePosixPath:
     if not isinstance(name, str) or not name.strip():
         raise FilesystemMaterializationError("artifact name must be non-empty")
@@ -35,6 +31,15 @@ def _safe_relative_path(name: str) -> PurePosixPath:
     if candidate == PurePosixPath("."):
         raise FilesystemMaterializationError("artifact name must identify a file")
     return candidate
+
+
+def _target_from_entity(artifact: MaterializedArtifact) -> TargetDescriptor:
+    target = artifact.entity.execution.get("target")
+    if isinstance(target, TargetDescriptor):
+        return target
+    if isinstance(target, dict):
+        return TargetDescriptor.from_document(target)
+    raise FilesystemMaterializationError("entity execution contract must contain a target descriptor")
 
 
 def materialize_to_directory(artifact: MaterializedArtifact, root: str | os.PathLike[str]) -> MaterializedFile:
@@ -57,24 +62,14 @@ def materialize_to_directory(artifact: MaterializedArtifact, root: str | os.Path
     finally:
         if temporary.exists():
             temporary.unlink()
-    manifest = ArtifactManifest(
-        target=artifact.entity.execution.get("target") if False else _target_from_entity(artifact),
-        format=artifact.format.strip(),
-        digest=digest,
-        size=len(payload),
-        name=name,
-        kind=artifact.entity.kind.strip(),
+    return MaterializedFile(
+        destination,
+        ArtifactManifest(
+            target=_target_from_entity(artifact),
+            format=artifact.format.strip(),
+            digest=digest,
+            size=len(payload),
+            name=name,
+            kind=artifact.entity.kind.strip(),
+        ),
     )
-    return MaterializedFile(destination, manifest)
-
-
-def _target_from_entity(artifact: MaterializedArtifact):
-    """Resolve the target descriptor carried by an entity execution contract."""
-    from .targets import TargetDescriptor
-
-    target = artifact.entity.execution.get("target")
-    if isinstance(target, TargetDescriptor):
-        return target
-    if isinstance(target, dict):
-        return TargetDescriptor.from_document(target)
-    raise FilesystemMaterializationError("entity execution contract must contain a target descriptor")
