@@ -25,6 +25,7 @@ from .materialize import MaterializedArtifact, Materializer, validate_materializ
 from .materializer import MaterializationError, MaterializationPlan, create_materialization_plan
 from .optimize import optimize_module
 from .os_model import OSModelError, OperatingSystemSpec
+from .package_writer import PackageWriteError, build_package, write_package
 from .packaging import PackageError, PackageManifest
 from .pipeline import CompilationResult, compile_semantics
 from .plugins import PluginRegistry
@@ -48,11 +49,11 @@ __all__ = [
     "FrontendRegistry", "FilesystemMaterializationError", "FunctionIR", "InstallationError", "InstallationPlan", "InstallerKind",
     "LoweringError", "MaterializedArtifact", "MaterializedFile", "Materializer", "MaterializationError", "MaterializationPlan",
     "ModuleIR", "OmniError", "OmniKeyword", "OmniProgram", "Operation", "OSBuildPlan", "OSModelError", "OperatingSystemSpec",
-    "PackageError", "PackageManifest", "PluginRegistry", "RuntimeErrorBase", "SemanticModel", "SemanticValidationError", "SerializationError",
+    "PackageError", "PackageManifest", "PackageWriteError", "PluginRegistry", "RuntimeErrorBase", "SemanticModel", "SemanticValidationError", "SerializationError",
     "Severity", "SourceNode", "SourceSpan", "SourceUnit", "TargetDescriptor", "TargetMatch", "TargetModel", "TargetResolutionError",
     "Token", "TypeDiagnostic", "TypeKind", "TypeRef", "UIR", "UIRValidationError", "ValidationError", "ValidationReport", "Value",
-    "check_module", "compile_semantics", "create_materialization_plan", "create_os_build_plan", "dumps_uir", "emit_c", "emit_with_backend",
+    "build_package", "check_module", "compile_semantics", "create_materialization_plan", "create_os_build_plan", "dumps_uir", "emit_c", "emit_with_backend",
     "entity_from_mapping", "evaluate_capabilities", "execute", "execute_module", "format_diagnostics", "is_valid", "loads_uir", "lower_to_ir",
     "manifest", "match", "materialize_to_directory", "optimize_module", "plan_compilation", "plan_construction", "plan_creation", "plan_installation",
-    "report", "resolve_target", "tokenize", "validate_materialized_artifact", "validate_function", "validate_module", "validate_uir",
+    "report", "resolve_target", "tokenize", "validate_materialized_artifact", "validate_function", "validate_module", "validate_uir", "write_package",
 ]
