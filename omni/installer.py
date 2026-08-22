@@ -53,6 +53,8 @@ class InstallationPlan:
             raise ValueError("installer metadata keys must be non-empty strings")
         if any(not isinstance(v, str) for v in self.metadata.values()):
             raise ValueError("installer metadata values must be strings")
+        object.__setattr__(self, "artifacts", tuple(a.strip() for a in self.artifacts))
+        object.__setattr__(self, "metadata", dict(self.metadata))
 
     def identity(self) -> str:
         return f"{self.kind.value}:{self.target.identity()}:{self.artifact_format.strip()}"
@@ -96,6 +98,47 @@ class InstallationPlan:
     def render_manifest(self) -> str:
         """Render the canonical manifest as human-readable JSON."""
         return json.dumps(self.manifest_document(), ensure_ascii=False, sort_keys=True, indent=2) + "\n"
+
+    @classmethod
+    def from_document(cls, document: Mapping[str, Any]) -> "InstallationPlan":
+        """Reconstruct and strictly validate a plan produced by ``manifest_document``."""
+        if not isinstance(document, Mapping):
+            raise InstallationError("installation manifest must be an object")
+        if document.get("schema") != "omni.installation.v1":
+            raise InstallationError("unsupported installation manifest schema")
+        target_data = document.get("target")
+        if not isinstance(target_data, Mapping):
+            raise InstallationError("installation manifest target must be an object")
+        try:
+            target = TargetDescriptor(
+                target_data["platform"],
+                target_data.get("architecture"),
+                target_data.get("abi"),
+                target_data.get("capabilities", {}),
+            )
+            plan = plan_installation(
+                target,
+                kind=InstallerKind(document["kind"]),
+                artifact_format=document["artifact_format"],
+                bootable=document["bootable"],
+                filesystem=document.get("filesystem"),
+                artifacts=tuple(document.get("artifacts", ())),
+                metadata=document.get("metadata", {}),
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            raise InstallationError(f"invalid installation manifest: {exc}") from exc
+        if document.get("identity") != plan.identity():
+            raise InstallationError("installation manifest identity does not match its contents")
+        return plan
+
+    @classmethod
+    def from_manifest(cls, payload: bytes | str) -> "InstallationPlan":
+        """Parse a canonical manifest and validate every field before reconstruction."""
+        try:
+            document = json.loads(payload.decode("utf-8") if isinstance(payload, bytes) else payload)
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise InstallationError(f"invalid installation manifest JSON: {exc}") from exc
+        return cls.from_document(document)
 
 
 def plan_installation(
