@@ -38,6 +38,7 @@ def build_parser() -> argparse.ArgumentParser:
     install.add_argument("--format", dest="artifact_format", required=True, help="installer artifact format")
     install.add_argument("--bootable", action="store_true")
     install.add_argument("--filesystem", default=None)
+    install.add_argument("--manifest", action="store_true", help="emit the canonical installation manifest")
     return parser
 
 
@@ -54,6 +55,8 @@ def _installation_json(args: argparse.Namespace) -> str:
         bootable=args.bootable,
         filesystem=args.filesystem,
     )
+    if args.manifest:
+        return plan.render_manifest()
     return json.dumps(
         {
             "identity": plan.identity(),
@@ -73,7 +76,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         if args.command == "install-plan":
-            print(_installation_json(args))
+            print(_installation_json(args), end="" if args.manifest else "\n")
             return 0
         document = _load(args.source)
         if args.command in {"validate", "run"}:
