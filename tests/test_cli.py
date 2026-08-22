@@ -79,3 +79,20 @@ def test_cli_can_render_canonical_installation_manifest(capsys):
     assert document["target"]["platform"] == "future-os"
     assert document["target"]["architecture"] == "future-cpu"
     assert document["bootable"] is True
+
+
+def test_cli_manifest_carries_artifacts_and_metadata(capsys):
+    assert main([
+        "install-plan", "--target", "future-os", "--format", "future-image",
+        "--artifact", "kernel.bin", "--artifact", "rootfs.img",
+        "--metadata", "channel=nightly", "--metadata", "version=1",
+        "--manifest",
+    ]) == 0
+    document = json.loads(capsys.readouterr().out)
+    assert document["artifacts"] == ["kernel.bin", "rootfs.img"]
+    assert document["metadata"] == {"channel": "nightly", "version": "1"}
+
+
+def test_cli_rejects_invalid_metadata(capsys):
+    assert main(["install-plan", "--target", "os", "--format", "pkg", "--metadata", "invalid"]) == 2
+    assert "KEY=VALUE" in capsys.readouterr().err
