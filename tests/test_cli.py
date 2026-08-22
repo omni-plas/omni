@@ -43,3 +43,26 @@ def test_cli_emits_c_source(tmp_path):
     source = output.read_text(encoding="utf-8")
     assert "int64_t main" in source
     assert "return result;" in source
+
+
+def test_cli_creates_installation_plan(capsys):
+    assert main([
+        "install-plan",
+        "--target", "future-os",
+        "--architecture", "future-cpu",
+        "--abi", "future-abi",
+        "--kind", "bootable",
+        "--format", "future-image",
+        "--bootable",
+        "--filesystem", "future-fs",
+    ]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["identity"] == "bootable:future-os-future-cpu-future-abi:future-image"
+    assert payload["filesystem"] == "future-fs"
+
+
+def test_cli_installation_plan_keeps_future_target_open_world(capsys):
+    assert main(["install-plan", "--target", "historical-os", "--format", "legacy-package"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["target"] == "historical-os"
+    assert payload["kind"] == "package"
