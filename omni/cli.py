@@ -38,12 +38,24 @@ def build_parser() -> argparse.ArgumentParser:
     install.add_argument("--format", dest="artifact_format", required=True, help="installer artifact format")
     install.add_argument("--bootable", action="store_true")
     install.add_argument("--filesystem", default=None)
+    install.add_argument("--artifact", action="append", default=[], help="artifact path; may be repeated")
+    install.add_argument("--metadata", action="append", default=[], metavar="KEY=VALUE", help="installer metadata; may be repeated")
     install.add_argument("--manifest", action="store_true", help="emit the canonical installation manifest")
     return parser
 
 
 def _load(path: Path) -> dict:
     return loads_uir(path.read_text(encoding="utf-8"))
+
+
+def _metadata(values: list[str]) -> dict[str, str]:
+    result: dict[str, str] = {}
+    for item in values:
+        key, separator, value = item.partition("=")
+        if not separator or not key.strip():
+            raise ValueError("--metadata values must use KEY=VALUE")
+        result[key.strip()] = value
+    return result
 
 
 def _installation_json(args: argparse.Namespace) -> str:
@@ -54,6 +66,8 @@ def _installation_json(args: argparse.Namespace) -> str:
         artifact_format=args.artifact_format,
         bootable=args.bootable,
         filesystem=args.filesystem,
+        artifacts=tuple(args.artifact),
+        metadata=_metadata(args.metadata),
     )
     if args.manifest:
         return plan.render_manifest()
@@ -66,6 +80,7 @@ def _installation_json(args: argparse.Namespace) -> str:
             "bootable": plan.bootable,
             "filesystem": plan.filesystem,
             "artifacts": list(plan.artifacts),
+            "metadata": dict(plan.metadata),
         },
         ensure_ascii=False,
         sort_keys=True,
