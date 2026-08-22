@@ -1,11 +1,11 @@
-"""Open-world installation planning and materialization metadata for Omni."""
+"""Open-world installation planning and deterministic installer manifests for Omni."""
 
 from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Mapping
+from typing import Any, Mapping
 
 from .targets import TargetDescriptor
 
@@ -24,7 +24,7 @@ class InstallerKind(str, Enum):
 
 @dataclass(frozen=True)
 class InstallationPlan:
-    """A target-neutral description of how a completed artifact is installed."""
+    """A validated, target-neutral description of how a completed artifact is installed."""
 
     target: TargetDescriptor
     kind: InstallerKind
@@ -62,28 +62,40 @@ class InstallationPlan:
             raise ValueError("installer artifact cannot be empty")
         return InstallationPlan(
             self.target, self.kind, self.artifact_format, self.bootable,
-            self.filesystem, self.artifacts + (artifact,), self.metadata
+            self.filesystem, self.artifacts + (artifact.strip(),), self.metadata
         )
 
-    def manifest(self) -> bytes:
-        """Serialize a deterministic installation manifest for downstream materializers."""
-        document = {
+    def manifest_document(self) -> dict[str, Any]:
+        """Return the canonical manifest structure consumed by materializers."""
+        return {
             "schema": "omni.installation.v1",
             "identity": self.identity(),
             "target": {
-                "platform": self.target.platform,
-                "architecture": self.target.architecture,
-                "abi": self.target.abi,
+                "platform": self.target.platform.strip(),
+                "architecture": self.target.architecture.strip() if self.target.architecture else None,
+                "abi": self.target.abi.strip() if self.target.abi else None,
                 "capabilities": dict(self.target.capabilities),
             },
             "kind": self.kind.value,
             "artifact_format": self.artifact_format.strip(),
             "bootable": self.bootable,
-            "filesystem": self.filesystem,
+            "filesystem": self.filesystem.strip() if self.filesystem else None,
             "artifacts": list(self.artifacts),
             "metadata": dict(self.metadata),
         }
-        return (json.dumps(document, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
+
+    def manifest(self) -> bytes:
+        """Serialize a deterministic installation manifest for downstream materializers."""
+        return (json.dumps(
+            self.manifest_document(),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ) + "\n").encode("utf-8")
+
+    def render_manifest(self) -> str:
+        """Render the canonical manifest as human-readable JSON."""
+        return json.dumps(self.manifest_document(), ensure_ascii=False, sort_keys=True, indent=2) + "\n"
 
 
 def plan_installation(
@@ -101,6 +113,6 @@ def plan_installation(
         raise InstallationError(f"{kind.value} installer must be marked bootable")
     if bootable and kind == InstallerKind.PACKAGE:
         raise InstallationError("package installer cannot be bootable; use bootable kind")
-    if kind == InstallerKind.BOOTABLE and not filesystem:
-        raise InstallationError("bootable installer requires a filesystem")
+    if kind in (InstallerKind.BOOTABLE, InstallerKind.RECOVERY) and not filesystem:
+        raise InstallationError(f"{kind.value} installer requires a filesystem")
     return InstallationPlan(target, kind, artifact_format, bootable, filesystem, artifacts, metadata or {})
