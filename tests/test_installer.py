@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from omni.installer import InstallationError, InstallationPlan, InstallerKind, plan_installation
@@ -50,3 +52,24 @@ def test_installation_plan_rejects_invalid_artifacts():
     plan = plan_installation(TargetDescriptor("os"), artifact_format="pkg")
     with pytest.raises(ValueError, match="artifact"):
         plan.with_artifact(" ")
+
+
+def test_installation_manifest_is_deterministic_and_complete():
+    target = TargetDescriptor("future-os", "future-cpu", capabilities={"era": "future"})
+    plan = plan_installation(
+        target,
+        kind=InstallerKind.BOOTABLE,
+        artifact_format="future-image",
+        bootable=True,
+        filesystem="future-fs",
+        artifacts=("kernel.bin", "rootfs.img"),
+        metadata={"channel": "stable"},
+    )
+    first = plan.manifest()
+    second = plan.manifest()
+    assert first == second
+    document = json.loads(first)
+    assert document["schema"] == "omni.installation.v1"
+    assert document["target"]["platform"] == "future-os"
+    assert document["artifacts"] == ["kernel.bin", "rootfs.img"]
+    assert document["metadata"]["channel"] == "stable"
