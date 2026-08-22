@@ -24,9 +24,11 @@ def test_bootable_installers_require_filesystem():
         plan_installation(TargetDescriptor("future-os"), kind=InstallerKind.BOOTABLE, artifact_format="image", bootable=True)
 
 
-def test_bootable_kind_requires_bootable_flag():
+def test_recovery_installers_require_bootable_flag_and_filesystem():
     with pytest.raises(InstallationError, match="bootable"):
-        plan_installation(TargetDescriptor("future-os"), kind=InstallerKind.BOOTABLE, artifact_format="image", filesystem="fs")
+        plan_installation(TargetDescriptor("future-os"), kind=InstallerKind.RECOVERY, artifact_format="image", filesystem="fs")
+    with pytest.raises(InstallationError, match="filesystem"):
+        plan_installation(TargetDescriptor("future-os"), kind=InstallerKind.RECOVERY, artifact_format="image", bootable=True)
 
 
 def test_package_kind_cannot_be_marked_bootable():
@@ -39,9 +41,9 @@ def test_installer_metadata_is_optional_and_open_world():
     assert plan.metadata["future-feature"] == "enabled"
 
 
-def test_installation_plan_can_accumulate_build_artifacts():
+def test_installation_plan_can_accumulate_and_normalize_build_artifacts():
     plan = plan_installation(TargetDescriptor("os"), artifact_format="image")
-    enriched = plan.with_artifact("kernel.bin").with_artifact("rootfs.img")
+    enriched = plan.with_artifact(" kernel.bin ").with_artifact("rootfs.img")
     assert enriched.artifacts == ("kernel.bin", "rootfs.img")
     assert plan.artifacts == ()
 
@@ -54,22 +56,28 @@ def test_installation_plan_rejects_invalid_artifacts():
         plan.with_artifact(" ")
 
 
-def test_installation_manifest_is_deterministic_and_complete():
-    target = TargetDescriptor("future-os", "future-cpu", capabilities={"era": "future"})
+def test_manifest_is_canonical_and_deterministic():
+    target = TargetDescriptor(
+        "future-os", "future-cpu", "future-abi",
+        capabilities={"z": "last", "a": {"enabled": True}},
+    )
     plan = plan_installation(
         target,
         kind=InstallerKind.BOOTABLE,
         artifact_format="future-image",
         bootable=True,
-        filesystem="future-fs",
+        filesystem=" future-fs ",
         artifacts=("kernel.bin", "rootfs.img"),
-        metadata={"channel": "stable"},
+        metadata={"version": "1", "channel": "future"},
     )
-    first = plan.manifest()
-    second = plan.manifest()
-    assert first == second
-    document = json.loads(first)
+    document = json.loads(plan.manifest())
     assert document["schema"] == "omni.installation.v1"
-    assert document["target"]["platform"] == "future-os"
-    assert document["artifacts"] == ["kernel.bin", "rootfs.img"]
-    assert document["metadata"]["channel"] == "stable"
+    assert document["identity"] == plan.identity()
+    assert document["target"]["capabilities"]["a"] == {"enabled": True}
+    assert document["filesystem"] == "future-fs"
+    assert plan.manifest() == plan.manifest()
+
+
+def test_render_manifest_is_human_readable_and_matches_document():
+    plan = plan_installation(TargetDescriptor("historical-os"), artifact_format="legacy-package")
+    assert json.loads(plan.render_manifest()) == plan.manifest_document()
