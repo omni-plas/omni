@@ -18,6 +18,7 @@ def test_install_pipeline_builds_bootable_future_target():
     pipeline = create_install_pipeline(spec, name="future-installer", version="1", artifact_format="future-image", bootable=True, filesystem="future-fs", kind=InstallerKind.BOOTABLE)
     assert pipeline.plan.target == target
     assert pipeline.format.target == target
+    assert pipeline.plan.filesystem == "future-fs"
 
 
 def test_install_pipeline_supports_nonbootable_historical_target():
@@ -25,3 +26,20 @@ def test_install_pipeline_supports_nonbootable_historical_target():
     spec = TargetSpecification(target, package_format="legacy-pkg")
     pipeline = create_install_pipeline(spec, name="legacy-installer", version="1", artifact_format="legacy-pkg")
     assert pipeline.plan.kind is InstallerKind.PACKAGE
+    assert pipeline.plan.bootable is False
+
+
+def test_install_pipeline_preserves_open_world_target_capabilities():
+    target = TargetDescriptor(
+        "unreleased-os",
+        capabilities={"era": "future", "installer": "custom"},
+    )
+    spec = TargetSpecification(target, package_format="custom-pkg")
+    pipeline = create_install_pipeline(
+        spec,
+        name="custom-installer",
+        version="0.1",
+        artifact_format="custom-package",
+    )
+    assert pipeline.specification.target.capability("era") == "future"
+    assert pipeline.specification.target.capability("installer") == "custom"
