@@ -66,3 +66,16 @@ def test_cli_installation_plan_keeps_future_target_open_world(capsys):
     payload = json.loads(capsys.readouterr().out)
     assert payload["target"] == "historical-os"
     assert payload["kind"] == "package"
+
+
+def test_cli_can_render_canonical_installation_manifest(capsys):
+    assert main([
+        "install-plan", "--target", "future-os", "--architecture", "future-cpu",
+        "--kind", "bootable", "--format", "future-image", "--bootable", "--filesystem", "future-fs",
+        "--manifest",
+    ]) == 0
+    document = json.loads(capsys.readouterr().out)
+    assert document["schema"] == "omni.installation.v1"
+    assert document["target"]["platform"] == "future-os"
+    assert document["target"]["architecture"] == "future-cpu"
+    assert document["bootable"] is True
