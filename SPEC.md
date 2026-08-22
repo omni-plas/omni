@@ -1,54 +1,81 @@
-# Omni — Universal Digital Creation, Compilation & Installation System
+# Omni — Universal Digital Creation, Transformation & Delivery System
 
-## 1. Complete Definition
+## 1. Supreme Definition
 
-Omni is an independent, self-contained, terminal-based programming language and a universal digital creation, compilation, packaging, installation, and execution system.
+Omni is an independent, self-contained, terminal-based programming language and an open-world universal digital creation, transformation, compilation, build, packaging, installation, execution, and maintenance system.
 
-Its ultimate purpose is to make the digital world programmable through Omni itself.
+Its single fundamental capability is:
 
-Omni is designed around these fundamental capabilities:
+> **Given a digital idea, specification, artifact, source, partial project, existing digital entity, or other sufficiently defined input at any stage of its lifecycle, Omni should be able to perform the remaining required work and transform it into a usable, executable, deployable, or installable digital product.**
 
-1. **Universal Digital Creation** — create any digital entity using Omni.
-2. **Universal Compilation** — process and compile source code from existing, historical, and future programming languages for existing, historical, and future targets.
-3. **Universal Operating-System Creation** — create operating-system source code, kernels, runtimes, drivers, system components, and complete operating-system distributions for operating systems that exist today, existed in the past, or may exist in the future.
-4. **Universal Packaging & Installation** — transform a completed digital system into a complete installable artifact and create the installer, installation environment, package format, bootable media, recovery environment, or deployment mechanism required by its target.
-5. **Self-Hosting** — Omni must ultimately be capable of building and compiling its own compiler, runtime, tools, libraries, and infrastructure without fundamentally depending on another programming language or external compiler.
+This principle applies to digital entities of the past, present, and future, and to every relevant environment, platform, target, architecture, language, and operating system, provided that the technical specifications, semantics, interfaces, dependencies, and other information required for correct transformation are available.
 
-These capabilities are open-world capabilities. Omni must not be limited to a permanently hard-coded list of languages, operating systems, architectures, runtimes, formats, installers, or digital entities.
+Omni is therefore not limited to a single programming language, compiler, operating system, era, architecture, file format, product category, or fixed catalog of digital entities.
+
+Programming is one stage within this larger lifecycle. Omni remains a real, independent programming language while the complete Omni system encompasses the entire path from an input or idea to a usable product.
 
 ---
 
-## 2. Omni Is an Independent Programming Language
+## 2. Global Principle: Any Time, Any Place, Any Stage
 
-Omni is a real programming language, not a wrapper around another language or compiler.
+The phrase **any time and any place** is a global architectural principle of Omni.
 
-Omni is not fundamentally based on Python, C, C++, Go, Rust, Java, or another programming language.
+Unless a requirement explicitly says otherwise, every Omni capability is intended to work across:
 
-The core Omni system must not require the user to install another language or compiler merely to use Omni's fundamental compilation capabilities.
+- Historical technologies and environments
+- Existing technologies and environments
+- Future technologies and environments
+- Different physical or virtual platforms
+- Different architectures
+- Different operating systems
+- Different CPUs
+- Different runtimes
+- Different ABIs
+- Different execution environments
+- Different deployment environments
+- Different development environments
 
-The long-term architecture must reach true self-hosting:
+This principle applies to languages, source code, digital entities, compilation, targets, operating systems, packages, libraries, plugins, formats, installers, runtimes, and all other Omni subsystems.
+
+"Any" does not mean magical creation from no information. A target or entity that is unknown, historical, future, or otherwise unusual must have sufficient formal specifications, semantics, interfaces, constraints, or other authoritative information available for Omni to reason about and correctly produce it.
+
+The architecture must remain open-world rather than requiring a permanent hard-coded catalog.
+
+---
+
+## 3. Omni Is an Independent Programming Language
+
+Omni is a real programming language and is not fundamentally based on or defined by Python, C, C++, Go, Rust, Java, JavaScript, or another programming language.
+
+Omni must not merely be a wrapper around GCC, Clang, MSVC, another compiler, or another language runtime.
+
+A user must not fundamentally need to install another programming language or compiler merely to use Omni's core capabilities.
+
+External tools may be supported as optional interoperability mechanisms where technically appropriate, but they must not define Omni's fundamental architecture.
+
+The long-term goal is true self-hosting:
 
 ```text
 Omni Source
     ↓
 Omni Compiler
     ↓
-Universal Semantic IR
+Universal Semantic Representation
     ↓
-Omni-owned compilation infrastructure
+Omni-owned Compilation Infrastructure
     ↓
 Target Artifact
 ```
 
-External tools may be supported as optional interoperability mechanisms where appropriate, but they must not define Omni's fundamental architecture or be treated as Omni's compiler.
+The language itself is therefore an essential part of the universal digital creation lifecycle, not something replaced by that lifecycle.
 
 ---
 
-## 3. Universal Digital Entity Creation
+## 4. Universal Digital Entity Scope
 
-A **Digital Entity** is anything that can be digitally defined, represented, generated, stored, processed, executed, installed, distributed, or used.
+A **Digital Entity** is anything that can be digitally defined, represented, generated, stored, transformed, processed, executed, distributed, installed, or used.
 
-Omni must be capable of creating, among other things:
+Omni must be designed to create or transform, among other things:
 
 - Software
 - Desktop applications
@@ -60,6 +87,7 @@ Omni must be capable of creating, among other things:
 - Kernels
 - Bootloaders
 - Drivers
+- Firmware
 - Runtimes
 - Virtual machines
 - Compilers and interpreters
@@ -87,15 +115,117 @@ Omni must be capable of creating, among other things:
 - Bootable images
 - Recovery systems
 - Deployment systems
-- Any digital entity that has not yet been invented
+- Digital entities that existed historically
+- Digital entities that exist today
+- Digital entities that have not yet been invented
 
-A system that creates software, a language that creates languages, or a system that creates other digital systems is itself a Digital Entity and must remain inside Omni's scope.
+A program that creates programs, a language that creates languages, or a system that creates other digital systems is itself a Digital Entity and remains inside Omni's scope.
 
 ---
 
-## 4. Universal Compilation
+## 5. Universal Lifecycle: From Any Stage to Product
 
-Omni must be able to process source code written in programming languages that exist today, existed historically, or may exist in the future.
+Omni must not require that a project begin as a blank idea.
+
+A project may enter Omni at any meaningful stage, including:
+
+```text
+Idea
+Specification
+Design
+Architecture
+Source Code
+Partial Source Code
+Project / Repository
+Components
+Libraries
+Packages
+Build Artifacts
+Binary / Executable
+System Image
+Installer
+Existing Digital Product
+```
+
+Where sufficient information exists, Omni should analyze the current state, determine what is missing, perform the remaining applicable stages, validate the result, and produce the appropriate usable product.
+
+The conceptual lifecycle is:
+
+```text
+Input at Any Stage
+        ↓
+Understand / Inspect
+        ↓
+Model Requirements and Semantics
+        ↓
+Complete or Generate Missing Parts
+        ↓
+Compile / Build / Transform
+        ↓
+Link / Assemble
+        ↓
+Test / Validate
+        ↓
+Debug / Repair / Optimize
+        ↓
+Package
+        ↓
+Generate Image / Installer / Deployment Artifact
+        ↓
+Install / Deploy
+        ↓
+Configure
+        ↓
+Run / Use
+        ↓
+Update / Repair / Maintain
+```
+
+Not every entity requires every stage. Omni must select the stages required by the entity and target.
+
+For example, source code may enter directly at the source stage, while a specification may enter before source generation. A partially completed operating system may enter at an intermediate stage and continue from there.
+
+---
+
+## 6. Universal Source-to-Product Capability
+
+Omni must be able to transform source code from languages of the past, present, and future into usable digital products, subject to sufficient technical information.
+
+This is broader than merely emitting a binary. The intended lifecycle is:
+
+```text
+Source Code
+    ↓
+Language Understanding
+    ↓
+Semantic Analysis
+    ↓
+Dependency Resolution
+    ↓
+Universal Semantic Representation
+    ↓
+Transformation / Compilation
+    ↓
+Link / Assemble
+    ↓
+Test / Validate
+    ↓
+Package
+    ↓
+Installer / Image / Deployment Artifact
+    ↓
+Usable Product
+```
+
+The input may be complete or incomplete. When source is incomplete, Omni should identify missing information or implementation and complete what can be determined from the available specifications, project context, dependencies, and rules.
+
+Omni must preserve or explicitly model program semantics rather than relying on simple textual substitution.
+
+---
+
+## 7. Universal Compilation
+
+Omni must be able to understand and process source code written in languages that existed historically, exist today, or may exist in the future.
 
 Examples include:
 
@@ -120,16 +250,16 @@ Examples include:
 - Future languages
 - User-defined languages
 
-The architecture must be open-world rather than a hard-coded language list.
+This is not a permanent whitelist. The architecture must be open-world.
 
-A language can be introduced through a sufficiently precise formal definition containing the information Omni needs to understand its syntax, semantics, type system, execution model, memory model, standard library interfaces, ABI/API expectations, and other relevant rules.
+A language may be introduced through a sufficiently precise formal definition containing the information Omni needs to understand its syntax, semantics, type system, execution model, memory model, ABI/API expectations, standard library interfaces, and other relevant rules.
 
 The intended model is:
 
 ```text
 Source Code
     ↓
-Omni Source Understanding
+Omni Language Understanding
     ↓
 Universal Semantic Representation
     ↓
@@ -142,49 +272,47 @@ Universal Backend / Emitter
 Target Artifact
 ```
 
-Omni must not merely perform textual substitution. It must preserve or explicitly model program semantics.
+The final goal is for Omni to perform fundamental compilation itself rather than requiring the original language compiler as a permanent dependency.
 
 ---
 
-## 5. Operating-System Source Creation, Compilation & Installation
+## 8. Universal Operating-System Creation
 
-This is a fundamental Omni requirement.
+Operating systems are first-class Digital Entities in Omni.
 
-Omni must be able to create **source code for operating systems**, compile that source code, package the resulting system, and produce a complete installation solution.
+Omni must be able to create operating-system source code, kernels, boot components, drivers, runtimes, system components, filesystems, package layouts, system images, installers, and complete installable operating-system distributions.
 
-This requirement applies to three categories of operating systems:
+This requirement applies to operating systems that:
 
-### 5.1 Existing Operating Systems
+1. existed in the past;
+2. exist today; and
+3. may exist in the future.
 
-Omni must be architected to create, compile, package, and prepare installation artifacts for operating systems that currently exist, subject to their published technical specifications and target capabilities.
+The same principle applies to the environment in which the operating system runs: historical, current, or future hardware, CPU, architecture, ABI, boot protocol, runtime, filesystem, and platform.
 
-Examples include:
+---
 
-- Windows
-- Linux distributions
-- macOS
-- ChromeOS
-- Android
-- iOS
-- Other existing operating systems
+## 9. Existing, Historical, and Future Operating Systems
 
-### 5.2 Historical Operating Systems
+### 9.1 Existing Operating Systems
 
-Omni must also be capable of targeting operating systems that existed in the past.
+Omni must be architected to create, compile, package, and prepare installation artifacts for currently existing operating systems, subject to their technical specifications and target capabilities.
 
-If the historical target's specifications, ABI, executable format, boot protocol, hardware requirements, filesystem expectations, or other necessary information are available, Omni should be able to model that target and produce compatible source code, binaries, packages, disk images, or installation artifacts.
+Examples include Windows, Linux distributions, macOS, ChromeOS, Android, iOS, and other existing systems.
 
-Examples may include historical operating systems and their historical hardware/platform environments.
+### 9.2 Historical Operating Systems
 
-Omni must not treat a historical operating system as impossible merely because it is no longer commercially supported.
+Omni must also support historical operating systems and their historical environments when the required technical information is available.
 
-### 5.3 Future Operating Systems
+Omni must not consider a historical operating system inherently impossible merely because it is obsolete or no longer commercially supported.
 
-Omni must be able to model and target operating systems that do not yet exist when sufficient formal specifications are provided.
+### 9.3 Future Operating Systems
 
-For a future operating system, Omni may require a target definition describing, for example:
+Omni must be able to model and target operating systems that do not yet exist when a sufficiently precise target specification is supplied.
 
-- Kernel interface
+Such a specification may define:
+
+- Kernel interfaces
 - System calls
 - ABI
 - Executable format
@@ -196,89 +324,78 @@ For a future operating system, Omni may require a target definition describing, 
 - Security model
 - Package model
 - Installation protocol
-- Required platform capabilities
+- Platform capabilities
+- Other target-specific rules
 
-This does not mean Omni performs magic prediction. It means Omni is designed so that a sufficiently specified future operating system can be introduced as a new target without redesigning the compiler around a fixed list.
+Omni does not predict an undefined future system magically. It provides an extensible mechanism through which a sufficiently specified future system can become a target without requiring a fundamental redesign of Omni.
 
 ---
 
-## 6. Complete Operating-System Build Pipeline
+## 10. Complete Operating-System Build and Installation Pipeline
 
 For an operating-system project, Omni must ultimately support a pipeline conceptually equivalent to:
 
 ```text
-OS Specification / Omni Source / Source Code
-                    ↓
-          Source Understanding
-                    ↓
-          Universal Semantic IR
-                    ↓
-             OS Model
-                    ↓
-      Kernel / Runtime / Drivers
-                    ↓
-          System Components
-                    ↓
-          Root Filesystem
-                    ↓
-          Package / File Layout
-                    ↓
-       Boot & Startup Components
-                    ↓
-          Disk / System Image
-                    ↓
-       Installation Definition
-                    ↓
-       Installer / Bootable Media
-                    ↓
-        Complete Installable OS
+OS Specification / Existing Project / Source / Partial Source
+                         ↓
+               Source Understanding
+                         ↓
+             Universal Semantic Model
+                         ↓
+                      OS Model
+                         ↓
+            Kernel / Runtime / Drivers
+                         ↓
+                 System Components
+                         ↓
+                 Root Filesystem
+                         ↓
+                 Package / File Layout
+                         ↓
+              Boot & Startup Components
+                         ↓
+                    System Image
+                         ↓
+               Installation Definition
+                         ↓
+              Installer / Bootable Media
+                         ↓
+              Complete Installable OS
 ```
 
-Omni should therefore not stop at producing a kernel or executable. The architecture must include the ability to represent the **complete distributable system** and the process required to install it.
+Omni must not stop at producing a kernel or executable when the intended product is a complete operating system.
 
 ---
 
-## 7. Universal Installer Creation
+## 11. Universal Installer Creation
 
-Omni must be capable of creating installers as Digital Entities.
+Installers are first-class Digital Entities.
 
-An installer may include:
+Omni must be able to create installation systems appropriate to the target, including where applicable:
 
-- Graphical installer
-- Terminal installer
-- Command-line installer
-- Bootable installer
-- Network installer
-- Package installer
-- System image installer
-- Recovery installer
+- Graphical installers
+- Terminal installers
+- Command-line installers
+- Bootable installers
+- Network installers
+- Package installers
+- System-image installers
+- Recovery installers
 - Firmware-assisted installation
 - Custom installation environments
 - Future installation mechanisms
 
-Omni must be capable of generating the installer software, its installation logic, its package metadata, its bootable media image where required, and the target-specific artifacts needed for a complete installation process.
+Omni must be able to generate the installer software, installation logic, metadata, package layout, bootable media image where required, and other target-specific artifacts necessary for a complete installation process.
 
-The architecture must support operations such as:
-
-```text
-omni build my-os.omni
-omni compile kernel.omni --target future-os
-omni package my-os --target future-os
-omni installer my-os --target future-os
-omni image my-os --target future-os
-```
-
-These commands describe architectural goals; the exact CLI may evolve.
-
-An installation target must be formally described sufficiently for Omni to know how the generated artifact is expected to be installed. Omni must not claim to install an undefined future operating system without the necessary target specification.
+The same requirement applies to application installers, system installers, OS installers, and installers for future digital entities.
 
 ---
 
-## 8. Historical, Existing, and Future Targets Are First-Class
+## 12. Universal Target Model
 
-The target model must not classify targets solely by whether they are currently popular or supported.
+Targets are first-class and extensible.
 
-A target can be:
+A target may be:
 
 ```text
 Historical Target
@@ -286,8 +403,6 @@ Existing Target
 Future Target
 User-Defined Target
 ```
-
-All of them must use the same extensible target architecture.
 
 A target definition may contain:
 
@@ -315,7 +430,39 @@ No permanent closed target catalog is allowed by the architecture.
 
 ---
 
-## 9. Self-Compilation of Omni
+## 13. Any Language, Any Target, Any Era
+
+The universal compilation and product-creation principles must compose.
+
+Conceptually:
+
+```text
+Any Language
+      +
+Any Source Stage
+      +
+Any Target
+      +
+Any Era
+      +
+Any Environment
+          ↓
+        OMNI
+          ↓
+  Analyze / Transform / Build
+          ↓
+       Test / Package
+          ↓
+ Installer / Image / Artifact
+          ↓
+    Usable Digital Product
+```
+
+This includes source code for historical, existing, or future operating systems and source code written in historical, existing, or future languages, provided the required information is available.
+
+---
+
+## 14. Self-Compilation and Self-Hosting
 
 Omni source code must itself be compilable by Omni.
 
@@ -326,53 +473,42 @@ Omni Source
     ↓
 Omni Compiler
     ↓
-Universal IR
+Universal Semantic Representation
     ↓
 Target Backend
     ↓
-Executable / Library / Runtime / Installer / Artifact
+Executable / Library / Runtime / Tool / Installer / Artifact
 ```
 
-For example:
-
-```text
-Omni Code → Windows
-Omni Code → Linux
-Omni Code → macOS
-Omni Code → Android
-Omni Code → Historical Target
-Omni Code → Future Target
-```
-
-This is a fundamental part of the path toward true self-hosting.
+The long-term goal is true self-hosting: Omni must ultimately be able to build and compile its own compiler, runtime, tools, libraries, packages, and core infrastructure without another programming language or external compiler being a fundamental requirement.
 
 ---
 
-## 10. Future Languages and Open-World Semantics
+## 15. Future Languages and Open-World Semantics
 
-Omni must not contain a permanently fixed list such as C++, Go, Python, and Rust and then stop.
+Omni must not contain a permanently fixed language list.
 
-Instead:
+A future or user-defined language should be introducible through a sufficiently precise definition:
 
 ```text
-Future Language
-      ↓
-Formal Language Definition
-      ↓
+Language Specification
+        ↓
 Omni Language Model
-      ↓
-Universal Semantic Representation
-      ↓
+        ↓
+Semantic Representation
+        ↓
+Source Analysis
+        ↓
 Target Resolution
-      ↓
-Output
+        ↓
+Product
 ```
 
-A future language can be supported when sufficient information about its syntax, semantics, execution model, and target requirements is available.
+The same open-world approach applies to future file formats, protocols, package systems, runtimes, architectures, operating systems, and digital entities.
 
 ---
 
-## 11. Ecosystem Compatibility
+## 16. Ecosystem Compatibility
 
 Omni must support interoperability with:
 
@@ -389,17 +525,17 @@ Omni must support interoperability with:
 - Omni-native packages
 - Omni-native plugins
 
-Examples include ecosystems associated with C/C++, Python, Go, Rust, Java, JavaScript, and future ecosystems.
+Compatibility must be extensible and must not be implemented as a permanently hard-coded list of known ecosystems.
 
-Compatibility must be designed as an extensible capability rather than a hard-coded list of known packages.
+The presence of an external dependency must not inherently prevent Omni from transforming a project into a usable product when the dependency can be correctly represented, resolved, built, packaged, or otherwise integrated under the target's rules.
 
 ---
 
-## 12. Multimedia and Non-Executable Digital Entities
+## 17. Multimedia and Non-Executable Digital Entities
 
-Digital entities are not limited to executable programs.
+Omni's universal entity model includes non-executable digital content.
 
-Omni must be able to model and generate or process:
+Omni must be architected to create, transform, package, distribute, or otherwise process:
 
 - Images
 - Audio
@@ -412,11 +548,11 @@ Omni must be able to model and generate or process:
 - Data files
 - Future media formats
 
-The same open-world entity architecture must apply to these formats.
+The same open-world model applies to these entities.
 
 ---
 
-## 13. Future Digital Entities
+## 18. Future Digital Entities
 
 Omni must be designed to create digital entities that do not yet exist.
 
@@ -437,97 +573,111 @@ This includes future:
 - Digital media types
 - Entire classes of digital systems
 
-Omni does not need supernatural knowledge of undefined systems. A genuinely new system must provide, or be represented by, enough formal specifications and semantics for Omni to reason about it.
+A genuinely new entity must provide, or be represented by, enough formal specifications, semantics, constraints, interfaces, or other authoritative information for Omni to reason about and produce it correctly.
 
 ---
 
-## 14. Universal Installation & Distribution Model
+## 19. Universal Distribution, Installation, and Maintenance
 
-Omni must treat distribution and installation as first-class digital build stages rather than external afterthoughts.
+Distribution and installation are first-class build stages, not external afterthoughts.
 
 A complete project may therefore contain:
 
 ```text
-Source
-  ↓
+Source / Input
+     ↓
 Semantic Model
-  ↓
-Compilation
-  ↓
+     ↓
+Compilation / Transformation
+     ↓
 Artifacts
-  ↓
+     ↓
 Packaging
-  ↓
+     ↓
 Installer Generation
-  ↓
+     ↓
 Bootable / Deployable Media
-  ↓
+     ↓
 Installable Product
+     ↓
+Configuration
+     ↓
+Execution / Use
+     ↓
+Update / Repair / Maintenance
 ```
 
-For an application, this may produce an application package or installer.
+For an application this may produce an application package or installer.
 
-For an operating system, this may produce a disk image, bootable media, installation environment, package repository, recovery image, and installer.
+For an operating system this may produce a disk image, bootable media, installation environment, package repository, recovery image, and installer.
 
-For another digital entity, Omni may define a different distribution mechanism through its open-world entity and target models.
+For another digital entity, Omni must be able to define an appropriate distribution mechanism through its open-world entity and target models.
 
 ---
 
-## 15. Architecture
+## 20. High-Level Architecture
 
-The intended high-level architecture is:
+The intended architecture is:
 
 ```text
-                  Any Digital Concept
-                         │
-                         ▼
-              Omni Language / Input Layer
-                         │
-                         ▼
-                Source Understanding
-                         │
-                         ▼
-             Universal Semantic Model / UIR
-                         │
-              ┌──────────┴──────────┐
-              ▼                     ▼
-       Digital Entity Model   Universal Compiler
-              │                     │
-              ▼                     ▼
-       Creation / Generation   Semantic Translation
-              │                     │
-              └──────────┬──────────┘
-                         ▼
-                 Target Resolution
-                         │
-          ┌──────────────┼──────────────┐
-          ▼              ▼              ▼
-      Historical       Existing       Future
-       Targets         Targets        Targets
-          │              │              │
-          └──────────────┼──────────────┘
-                         ▼
-                Backend / Materializer
-                         │
-          ┌──────────────┼──────────────┐
-          ▼              ▼              ▼
-       Executable      Package       OS Image
-          │              │              │
-          └──────────────┼──────────────┘
-                         ▼
-                Installer Generation
-                         │
-                         ▼
-              Complete Installable Artifact
+                 Any Digital Input / Concept
+                           │
+                           ▼
+                Omni Language / Input Layer
+                           │
+                           ▼
+                  Source / Entity Understanding
+                           │
+                           ▼
+              Universal Semantic Model / UIR
+                           │
+                ┌──────────┴──────────┐
+                ▼                     ▼
+        Digital Entity Model   Universal Compiler
+                │                     │
+                ▼                     ▼
+        Creation / Generation   Semantic Translation
+                │                     │
+                └──────────┬──────────┘
+                           ▼
+                    Target Resolution
+                           │
+             ┌─────────────┼─────────────┐
+             ▼             ▼             ▼
+         Historical      Existing      Future
+          Targets        Targets       Targets
+             │             │             │
+             └─────────────┼─────────────┘
+                           ▼
+                  Backend / Materializer
+                           │
+             ┌─────────────┼─────────────┐
+             ▼             ▼             ▼
+          Executable     Package      OS Image
+             │             │             │
+             └─────────────┼─────────────┘
+                           ▼
+                  Installer Generation
+                           │
+                           ▼
+                Complete Installable Artifact
+                           │
+                           ▼
+                    Deploy / Install / Run
+                           │
+                           ▼
+                     Update / Maintain
 ```
+
+The implementation may divide these responsibilities into multiple modules, but the modules must serve the single overarching goal of transforming digital inputs into usable digital products.
 
 ---
 
-## 16. Terminal Experience
+## 21. Terminal Experience
 
 From the user's perspective, Omni is a terminal-based language and toolchain.
 
-Examples of the intended interface include:
+Illustrative commands include:
 
 ```text
 omni build project.omni
@@ -542,34 +692,61 @@ omni installer my-os --target future-os
 omni image my-os --target future-os
 ```
 
-The exact commands are implementation details and may evolve. The capabilities they represent are architectural requirements.
+These examples describe architectural capabilities. The exact CLI syntax may evolve during implementation.
 
 ---
 
-## 17. Fundamental Constraint: Specifications Matter
+## 22. Fundamental Constraint: Specifications and Information Matter
 
-Omni is intentionally ambitious but not magical.
+Omni is intentionally universal but is not magical.
 
-Omni can only correctly compile, create, package, or install a target when the information necessary to define that target is available.
+Correct creation, transformation, compilation, packaging, or installation requires the information needed to define the source, entity, environment, and target.
 
-For existing targets, this may include published specifications and compatibility information.
+For an existing target, this may include published specifications and compatibility information.
 
-For historical targets, historical technical documentation and target information may be required.
+For a historical target, historical technical documentation and hardware/platform information may be required.
 
-For future targets, a formal target specification must be supplied before Omni can generate a correct target-specific artifact.
+For a future target, a sufficiently formal target specification must be supplied before Omni can generate a correct target-specific artifact.
 
 Therefore:
 
-> Open-world does not mean undefined-world. Omni must be able to model any sufficiently specified digital world without redesigning its fundamental architecture.
+> **Open-world does not mean undefined-world. Omni must be capable of modeling any sufficiently specified digital world without redesigning its fundamental architecture.**
+
+When information is missing, Omni should report the missing requirements rather than pretending that an unsupported transformation was completed.
 
 ---
 
-## 18. Final Definition
+## 23. Engineering Principles Derived from the Definition
 
-> **Omni is an independent, self-contained, terminal-based programming language and universal digital creation, compilation, packaging, installation, and execution system. Its goal is to make it possible to create any digital entity with Omni itself, including software, websites, games, AI systems, operating systems, kernels, runtimes, compilers, programming languages, databases, APIs, libraries, plugins, multimedia, installers, and systems that create other systems. Omni must also be able to process and compile source code from programming languages that exist today, existed historically, or may exist in the future, without making external compilers a fundamental requirement of Omni. It must be able to target operating systems, architectures, runtimes, ABIs, execution environments, package formats, and installation systems that exist today, existed in the past, or may exist in the future, provided the necessary specifications are available. For operating systems in particular, Omni must be capable of creating source code, compiling it, assembling the complete system, packaging it, generating installation artifacts and installers, producing bootable or deployable media where required, and preparing a complete installable operating-system distribution. The architecture must be open-world, extensible, semantically driven, and ultimately self-hosting, so that Omni itself can build and compile its compiler, runtime, libraries, tools, and infrastructure.**
+All implementation work in the Omni repository must be evaluated against this specification.
+
+The implementation should prioritize:
+
+- Independence
+- Self-hosting
+- Open-world extensibility
+- Semantic correctness
+- Deterministic and reproducible builds where applicable
+- Explicit target definitions
+- Modular architecture
+- Extensible entity modeling
+- Extensible language modeling
+- Extensible package and dependency modeling
+- Testability
+- Validation
+- Clear failure reporting
+- No fake success or placeholder implementations presented as completed functionality
+
+A feature is not considered complete merely because a command exists. Its underlying representation, validation, transformation, and tests must exist at the level appropriate to the implemented stage.
 
 ---
 
-## 19. Simplest Definition for Non-Programmers
+## 24. Final Definition
 
-> **Omni aims to be an all-purpose language for the digital world: a language with which you can build digital things, create and compile operating systems from different eras, build installers and complete installable systems, compile code for today's and tomorrow's platforms, and extend the system to support new languages, technologies, and digital entities that do not exist yet—when their required specifications are available.**
+> **Omni is an independent, self-contained, terminal-based programming language and an open-world universal digital creation, transformation, compilation, packaging, installation, execution, and maintenance system. Its single fundamental purpose is to transform digital inputs into usable digital products, regardless of where those inputs occur in the lifecycle: from an idea or specification, through design, architecture, source code, partial source code, components, packages, artifacts, images, or existing digital entities, and onward through whatever stages are required. Programming is one part of this lifecycle, and Omni remains a real independent programming language rather than a wrapper around another language or compiler. Omni must be able to understand and transform source code from languages of the past, present, and future, and target operating systems, CPUs, architectures, runtimes, ABIs, platforms, formats, and installation mechanisms of the past, present, and future, whenever the specifications and information necessary for correct transformation are available. For operating systems in particular, Omni must be able to create source code, compile it, assemble kernels and system components, build complete system images, package them, generate installers and bootable or deployable media where required, and produce complete installable distributions. The same universal principle applies to applications, games, AI systems, compilers, programming languages, databases, websites, multimedia, libraries, plugins, tools, and any other digital entity, including entities that do not yet exist. Omni must remain open-world rather than being limited by a permanently hard-coded list, must support relevant ecosystems and dependencies, and must ultimately become self-hosting so that Omni can build and compile its own compiler, runtime, tools, libraries, and infrastructure. Across all of these capabilities, the principle is the same: any sufficiently defined digital input, at any stage, in any relevant era or environment, should be transformable by Omni into the appropriate usable, executable, deployable, or installable product.**
+
+---
+
+## 25. Simplest Definition for Non-Programmers
+
+> **Omni aims to be an all-purpose system for the digital world: a language and tool that can take almost any sufficiently defined digital idea, code, project, or existing digital thing—whether from the past, present, or future—and do the work needed to turn it into a usable product, including building, compiling, testing, packaging, creating installers, installing, running, and maintaining it.**
