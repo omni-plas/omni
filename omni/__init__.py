@@ -7,6 +7,7 @@ from .backend import BackendError, BackendRegistry, BackendSelection, GenericArt
 from .boot_backend import BootArtifact, BootBackend, ContainerBootBackend, build_boot_artifact
 from .boot_contract import BootContract, require_boot_capabilities
 from .boot_manifest import BootManifest, create_boot_manifest
+from .boot_manifest_verify import verify_boot_manifest
 from .boot_registry import BootBackendMatch, BootBackendRegistry
 from .build_pipeline import BuildPipelineError, OSBuildPlan, create_os_build_plan
 from .capabilities import CapabilityGap, CapabilityReport, match
@@ -78,5 +79,5 @@ __all__ = [
     "UIRValidationError", "ValidationError", "ValidationReport", "Value", "apply_installer", "build_boot_artifact", "build_installer", "build_os_image", "build_package", "build_release", "check_module", "compile_native", "compile_native_executable", "compile_semantics",
     "compile_source", "compile_uir", "create_boot_manifest", "create_materialization_plan", "create_os_build_plan", "dumps_uir", "emit_c", "emit_with_backend", "emit_x86_64_elf", "entity_from_mapping",
     "evaluate_capabilities", "execute", "execute_module", "extract_installer", "format_diagnostics", "inspect_installer", "is_valid", "loads_uir", "lower_to_ir", "manifest", "match", "materialize_to_directory", "optimize_module", "parse_os_image", "plan_compilation", "plan_construction", "plan_creation", "plan_installation", "read_artifact", "read_artifact_file",
-    "report", "require_boot_capabilities", "resolve_installer_target", "resolve_target", "tokenize", "validate_artifact_for_target", "validate_materialized_artifact", "validate_function", "validate_module", "validate_uir", "verify_installer", "write_artifact", "write_installer", "write_native_executable", "write_package", "write_release",
+    "report", "require_boot_capabilities", "resolve_installer_target", "resolve_target", "tokenize", "validate_artifact_for_target", "validate_materialized_artifact", "validate_function", "validate_module", "validate_uir", "verify_boot_manifest", "verify_installer", "write_artifact", "write_installer", "write_native_executable", "write_package", "write_release",
 ]
