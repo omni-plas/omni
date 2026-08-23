@@ -11,6 +11,7 @@ from .diagnostics import format_diagnostics
 from .emitters import EmitterError, emit_c
 from .errors import OmniError
 from .installer import InstallerKind, plan_installation
+from .installer_runtime import extract_installer, inspect_installer
 from .lower import lower_to_ir
 from .native_artifact import compile_native_artifact
 from .native_executable import compile_native_executable, write_native_executable
@@ -53,6 +54,11 @@ def build_parser() -> argparse.ArgumentParser:
     install.add_argument("--artifact", action="append", default=[], help="artifact path; may be repeated")
     install.add_argument("--metadata", action="append", default=[], metavar="KEY=VALUE", help="installer metadata; may be repeated")
     install.add_argument("--manifest", action="store_true", help="emit the canonical installation manifest")
+    inspect = subparsers.add_parser("installer-inspect", help="validate and inspect an Omni installer bundle")
+    inspect.add_argument("installer", type=Path)
+    extract = subparsers.add_parser("installer-extract", help="safely extract the verified package from an Omni installer")
+    extract.add_argument("installer", type=Path)
+    extract.add_argument("destination", type=Path)
     return parser
 
 
@@ -89,6 +95,13 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "install-plan":
             print(_installation_json(args), end="" if args.manifest else "\n")
+            return 0
+        if args.command == "installer-inspect":
+            print(json.dumps(inspect_installer(args.installer.read_bytes()), ensure_ascii=False, sort_keys=True))
+            return 0
+        if args.command == "installer-extract":
+            path = extract_installer(args.installer.read_bytes(), args.destination)
+            print(path)
             return 0
         if args.command == "build":
             artifact = compile_native_artifact(args.source.read_text(encoding="utf-8"), filename=str(args.source))
