@@ -13,6 +13,7 @@ from .errors import OmniError
 from .installer import InstallerKind, plan_installation
 from .lower import lower_to_ir
 from .native_artifact import compile_native_artifact
+from .native_executable import compile_native_executable, write_native_executable
 from .native_frontend import OmniNativeFrontend
 from .pipeline import compile_semantics
 from .runtime import execute_module
@@ -33,6 +34,11 @@ def build_parser() -> argparse.ArgumentParser:
     build = subparsers.add_parser("build", help="build native Omni source into a portable artifact")
     build.add_argument("source", type=Path)
     build.add_argument("-o", "--output", type=Path, required=True)
+    native_exec = subparsers.add_parser("native-exec", help="compile a UIR JSON program to a self-contained x86-64 ELF executable")
+    native_exec.add_argument("source", type=Path)
+    native_exec.add_argument("-o", "--output", type=Path, required=True)
+    native_exec.add_argument("--target", default="linux", choices=("linux", "gnu-linux"))
+    native_exec.add_argument("--architecture", default="x86_64", choices=("x86_64", "amd64"))
     emit = subparsers.add_parser("emit-c", help="emit a UIR program as C99 source")
     emit.add_argument("source", type=Path)
     emit.add_argument("output", type=Path)
@@ -88,6 +94,16 @@ def main(argv: list[str] | None = None) -> int:
             artifact = compile_native_artifact(args.source.read_text(encoding="utf-8"), filename=str(args.source))
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_bytes(artifact.payload)
+            return 0
+        if args.command == "native-exec":
+            document = _load(args.source)
+            result = compile_semantics(document)
+            if not result.ok or result.ir is None:
+                print(format_diagnostics(result.diagnostics), file=sys.stderr)
+                return 2
+            target = TargetDescriptor(args.target, args.architecture, "sysv", {"native-executable": True})
+            executable = compile_native_executable(result.ir, target)
+            write_native_executable(args.output, executable)
             return 0
         if args.command == "validate" and args.language == "omni":
             return _validate_native(args.source)
