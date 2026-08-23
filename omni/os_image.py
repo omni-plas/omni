@@ -31,7 +31,7 @@ def _safe_path(path: str) -> str:
 
 
 def build_os_image(target: TargetDescriptor, files: dict[str, bytes], *, boot_contract=None) -> OSImage:
-    """Build a deterministic Omni OS image container.
+    """Build a deterministic target-neutral OS image container.
 
     A target-neutral image is not claimed to be bootable by itself. When a
     BootContract is supplied, its target and required boot capabilities are
@@ -51,7 +51,7 @@ def build_os_image(target: TargetDescriptor, files: dict[str, bytes], *, boot_co
     entries.sort(key=lambda item: item[0])
     header = {
         "format": "omni-os-image-v1",
-        "target": target.to_document(),
+        "target": target.document(),
         "file_count": len(entries),
         "boot_contract": None if boot_contract is None else {
             "boot_protocol": boot_contract.boot_protocol,
@@ -61,7 +61,7 @@ def build_os_image(target: TargetDescriptor, files: dict[str, bytes], *, boot_co
         },
     }
     out = bytearray(b"OMNIOS1\0")
-    encoded = json.dumps(header, sort_keys=True, separators=(",", ":")).encode()
+    encoded = json.dumps(header, sort_keys=True, separators=(",", ":")).encode("utf-8")
     out += struct.pack("<I", len(encoded)) + encoded
     for name, data in entries:
         name_bytes = name.encode("utf-8")
