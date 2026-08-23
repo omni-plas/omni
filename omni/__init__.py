@@ -32,7 +32,6 @@ from .installer_runtime import InstallerRuntimeError, extract_installer, inspect
 from .installer_verify import InstallerVerificationError, verify_installer
 from .ir import BasicBlock, FunctionIR, ModuleIR, Operation, Value
 from .language import OmniKeyword, OmniProgram
-from .lexer import Token, tokenize
 from .lower import lower_to_ir
 from .materialize import MaterializedArtifact, Materializer, validate_materialized_artifact
 from .materializer import MaterializationError, MaterializationPlan, create_materialization_plan
@@ -57,6 +56,7 @@ from .serialization import SerializationError, dumps_uir, loads_uir
 from .source_model import SourceNode, SourceSpan, SourceUnit
 from .source_pipeline import SourceCompilationResult, SourcePipelineError, compile_source
 from .target_artifact import validate_artifact_for_target
+from .target_context import apply_target_context
 from .target_installers import InstallerFormat, InstallerTarget, resolve_installer_target
 from .target_model import TargetModel
 from .targeting import TargetMatch, TargetResolutionError, resolve_target
@@ -64,6 +64,7 @@ from .targets import TargetDescriptor
 from .typecheck import TypeDiagnostic, check_module, is_valid
 from .types import TypeKind, TypeRef
 from .uir import UIR, UIRValidationError, validate_uir
+from .universal_pipeline import UniversalCompilationResult, UniversalPipelineError, compile_universal
 from .validation import SemanticValidationError, validate_function, validate_module
 from .validation_report import ValidationReport, report
 
@@ -77,8 +78,8 @@ __all__ = [
     "PackageError", "PackageManifest", "PackageWriteError", "PluginRegistry", "ReleasePipelineError", "ReleaseResult", "RuntimeErrorBase", "SemanticModel",
     "SemanticValidationError", "SerializationError", "Severity", "SourceCompilationResult", "SourceNode", "SourcePipelineError", "SourceSpan", "SourceUnit",
     "TargetBackend", "TargetDescriptor", "TargetMatch", "TargetModel", "TargetResolutionError", "Token", "TypeDiagnostic", "TypeKind", "TypeRef", "UIR",
-    "UIRValidationError", "ValidationError", "ValidationReport", "Value", "VerifiedBootResult", "apply_installer", "build_boot_artifact", "build_installer", "build_os_image", "build_package", "build_release", "build_verified_boot", "check_module", "compile_native", "compile_native_executable", "compile_semantics",
+    "UIRValidationError", "UniversalCompilationResult", "UniversalPipelineError", "ValidationError", "ValidationReport", "Value", "VerifiedBootResult", "apply_installer", "apply_target_context", "build_boot_artifact", "build_installer", "build_os_image", "build_package", "build_release", "build_verified_boot", "check_module", "compile_native", "compile_native_executable", "compile_semantics", "compile_universal",
     "compile_source", "compile_uir", "create_boot_manifest", "create_materialization_plan", "create_os_build_plan", "dumps_uir", "emit_c", "emit_with_backend", "emit_x86_64_elf", "entity_from_mapping",
     "evaluate_capabilities", "execute", "execute_module", "extract_installer", "format_diagnostics", "inspect_installer", "is_valid", "loads_uir", "lower_to_ir", "manifest", "match", "materialize_to_directory", "optimize_module", "parse_os_image", "plan_compilation", "plan_construction", "plan_creation", "plan_installation", "read_artifact", "read_artifact_file",
-    "report", "require_boot_capabilities", "resolve_installer_target", "resolve_target", "tokenize", "validate_artifact_for_target", "validate_materialized_artifact", "validate_function", "validate_module", "validate_uir", "verify_boot_manifest", "verify_installer", "write_artifact", "write_installer", "write_native_executable", "write_package", "write_release",
+    "report", "require_boot_capabilities", "resolve_installer_target", "resolve_target", "tokenize", "validate_artifact_for_target", "validate_function", "validate_module", "validate_uir", "verify_boot_manifest", "verify_installer", "write_artifact", "write_installer", "write_native_executable", "write_package", "write_release",
 ]
