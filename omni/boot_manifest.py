@@ -42,7 +42,7 @@ def create_boot_manifest(artifact: BootArtifact, contract: BootContract) -> Boot
         raise ValueError("boot artifact digest mismatch")
     return BootManifest(
         "omni-boot-manifest-v1",
-        artifact.target.to_document(),
+        artifact.target.document(),
         contract.boot_protocol,
         contract.firmware,
         contract.filesystem,
