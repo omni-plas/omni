@@ -25,10 +25,10 @@ class BootBackend(Protocol):
 
 
 class ContainerBootBackend:
-    """Target-neutral backend that materializes a validated boot container.
+    """Target-neutral validated boot container.
 
-    Native firmware/bootloader backends can implement the same protocol later;
-    this backend intentionally performs no platform-specific boot magic.
+    Platform-specific firmware and bootloader backends can implement the same
+    protocol without changing the upstream Omni image pipeline.
     """
 
     name = "omni-boot-container-v1"
@@ -38,10 +38,10 @@ class ContainerBootBackend:
         if parsed.target != image.target:
             raise OSImageError("image target changed during parsing")
         require_boot_capabilities(image.target, contract)
+        if parsed.digest != image.digest:
+            raise OSImageError("OS image digest mismatch")
         return BootArtifact(image.target, image.payload, self.name, image.digest)
 
 
 def build_boot_artifact(image: OSImage, contract: BootContract, backend: BootBackend | None = None) -> BootArtifact:
-    if backend is None:
-        backend = ContainerBootBackend()
-    return backend.build(image, contract)
+    return (backend or ContainerBootBackend()).build(image, contract)
