@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .native_codegen import NativeExecutable, emit_x86_64_elf
+from .native_multi_codegen import emit_multi_x86_64_elf
 from .omni_lowering import lower_source
 from .ir import ModuleIR
 from .targets import TargetDescriptor
@@ -30,8 +31,9 @@ def compile_omni_source(
     if emit_native:
         if target not in {"linux-x86_64", "linux-amd64"}:
             raise ValueError(f"native bootstrap currently supports linux-x86_64 only: {target}")
-        executable = emit_x86_64_elf(
-            module,
-            TargetDescriptor("linux", "x86_64", "sysv", {"native-executable": True}),
-        )
+        descriptor = TargetDescriptor("linux", "x86_64", "sysv", {"native-executable": True})
+        if len(module.functions) == 1:
+            executable = emit_x86_64_elf(module, descriptor)
+        else:
+            executable = emit_multi_x86_64_elf(module, descriptor)
     return OmniCompilation(source, module, target, executable)
