@@ -23,7 +23,7 @@ from .emitters import EmitterError, emit_c
 from .entities import EntitySpec
 from .entity_validate import entity_from_mapping
 from .errors import CapabilityError, LoweringError, OmniError, ValidationError
-from .frontend import Frontend, FrontendRegistry
+from .frontend import Frontend, FrontendCandidate, FrontendRegistry
 from .frontend_metadata import FrontendMetadata
 from .fs_materializer import FilesystemMaterializationError, MaterializedFile, materialize_to_directory
 from .installer import InstallationError, InstallationPlan, InstallerKind, plan_installation
@@ -72,7 +72,7 @@ from .validation_report import ValidationReport, report
 __all__ = [
     "Artifact", "ArtifactManifest", "Backend", "BackendCompilationResult", "BackendError", "BackendRegistry", "BackendSelection", "BasicBlock",
     "BootArtifact", "BootBackend", "BootBackendMatch", "BootBackendRegistry", "BootContract", "BootManifest", "BuildPipelineError", "CapabilityError", "CapabilityGap", "CapabilityReport", "CapabilityRequirement", "CompilationError", "CompilationPlan",
-    "CompilationResult", "ConstructionPlan", "ContainerBootBackend", "CreationPlan", "CreationStep", "Diagnostic", "DigitalSpec", "EmitterError", "EntitySpec", "Frontend",
+    "CompilationResult", "ConstructionPlan", "ContainerBootBackend", "CreationPlan", "CreationStep", "Diagnostic", "DigitalSpec", "EmitterError", "EntitySpec", "Frontend", "FrontendCandidate",
     "FrontendMetadata", "FrontendRegistry", "FilesystemMaterializationError", "FunctionIR", "GenericArtifactBackend", "InstallationError", "InstallationPlan", "InstallerBuildError",
     "InstallerBundle", "InstallerFormat", "InstallerKind", "InstallerRuntimeError", "InstallerTarget", "InstallerVerificationError", "LoweringError", "MaterializedArtifact", "MaterializedFile", "Materializer", "MaterializationError", "MaterializationPlan",
     "ModuleIR", "NativeArtifactBackend", "NativeCodegenError", "NativeExecutable", "OSImage", "OSImageError", "OSImageFile", "ParsedOSImage", "OmniError", "OmniFrontend", "OmniKeyword", "OmniNativeFrontend", "OmniProgram", "Operation", "OSBuildPlan", "OSModelError", "OperatingSystemSpec",
