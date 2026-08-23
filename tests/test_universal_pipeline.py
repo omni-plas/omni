@@ -1,8 +1,7 @@
 from omni.backend import BackendRegistry, GenericArtifactBackend
 from omni.frontend import FrontendRegistry
-from omni.target_model import TargetModel
 from omni.targets import TargetDescriptor
-from omni.universal_pipeline import UniversalPipelineError, compile_universal
+from omni.universal_pipeline import compile_universal
 from omni.uir import UIR
 
 
@@ -13,26 +12,29 @@ class FutureFrontend:
         return language == self.language
 
     def parse(self, source: str, *, filename: str = "<source>") -> UIR:
-        target = TargetDescriptor("future-os", "future-cpu", "future-abi", {"semantic-artifact": True})
-        return UIR("future.entity", target, {"source": source, "filename": filename})
+        target = TargetDescriptor("frontend-default", "default-cpu", "default-abi", {"semantic-artifact": True})
+        return UIR(
+            "1",
+            {"kind": "future.entity"},
+            {"language": self.language, "filename": filename},
+            target.document(),
+            {"program": source, "behavior": {"source": source}},
+        )
 
 
-def test_universal_pipeline_accepts_future_language_and_target():
-    frontend = FrontendRegistry((FutureFrontend(),))
-    backend = BackendRegistry((GenericArtifactBackend(),))
+def test_universal_pipeline_binds_requested_future_target():
+    frontends = FrontendRegistry((FutureFrontend(),))
+    backends = BackendRegistry((GenericArtifactBackend(),))
     target = TargetDescriptor("future-os", "future-cpu", "future-abi", {"semantic-artifact": True})
-    result = compile_universal("future source", "future-language", target, frontends=frontend, backends=backend)
+    result = compile_universal("future source", "future-language", target, frontends=frontends, backends=backends)
     assert result.frontend_name == "future-language"
     assert result.backend_name == GenericArtifactBackend.name
-    assert result.artifact.payload
+    assert result.plan.target == target
 
 
-def test_universal_pipeline_rejects_target_mismatch():
-    frontend = FrontendRegistry((FutureFrontend(),))
-    backend = BackendRegistry((GenericArtifactBackend(),))
-    requested = TargetDescriptor("other-os", "other-cpu", "other-abi", {"semantic-artifact": True})
-    try:
-        compile_universal("future source", "future-language", requested, frontends=frontend, backends=backend)
-    except UniversalPipelineError:
-        return
-    raise AssertionError("target mismatch must fail")
+def test_universal_pipeline_accepts_open_world_target_identity():
+    frontends = FrontendRegistry((FutureFrontend(),))
+    backends = BackendRegistry((GenericArtifactBackend(),))
+    target = TargetDescriptor("another-future-os", "another-future-cpu", "another-future-abi", {"semantic-artifact": True})
+    result = compile_universal("source", "future-language", target, frontends=frontends, backends=backends)
+    assert result.plan.target.platform == "another-future-os"
