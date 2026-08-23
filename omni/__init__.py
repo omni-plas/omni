@@ -1,5 +1,6 @@
 """Omni universal digital creation, compilation, packaging and installation engine."""
 
+from .artifact_io import read_artifact_file, write_artifact
 from .artifacts import ArtifactManifest, manifest
 from .backends import Artifact, Backend, emit_with_backend
 from .backend import BackendError, BackendRegistry, BackendSelection, GenericArtifactBackend, TargetBackend
@@ -63,7 +64,7 @@ __all__ = [
     "TargetBackend", "TargetDescriptor", "TargetMatch", "TargetModel", "TargetResolutionError", "Token", "TypeDiagnostic", "TypeKind", "TypeRef", "UIR",
     "UIRValidationError", "ValidationError", "ValidationReport", "Value", "build_installer", "build_package", "build_release", "check_module", "compile_native", "compile_semantics",
     "compile_source", "compile_uir", "create_materialization_plan", "create_os_build_plan", "dumps_uir", "emit_c", "emit_with_backend", "entity_from_mapping",
-    "evaluate_capabilities", "execute", "execute_module", "format_diagnostics", "is_valid", "loads_uir", "lower_to_ir", "manifest", "match", "read_artifact",
+    "evaluate_capabilities", "execute", "execute_module", "format_diagnostics", "is_valid", "loads_uir", "lower_to_ir", "manifest", "match", "read_artifact", "read_artifact_file",
     "materialize_to_directory", "optimize_module", "plan_compilation", "plan_construction", "plan_creation", "plan_installation", "report", "resolve_target",
-    "tokenize", "validate_materialized_artifact", "validate_function", "validate_module", "validate_uir", "write_installer", "write_package", "write_release",
+    "tokenize", "validate_materialized_artifact", "validate_function", "validate_module", "validate_uir", "write_artifact", "write_installer", "write_package", "write_release",
 ]
