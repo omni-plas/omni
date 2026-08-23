@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
+from .frontend_metadata import FrontendMetadata
 from .uir import UIR
 
 
@@ -45,13 +46,25 @@ class FrontendRegistry:
                 return
         raise LookupError(f"no frontend registered for language {language!r}")
 
-    def resolve(self, language: str) -> Frontend:
+    def resolve(self, language: str, *, version: str | None = None, extension: str | None = None) -> Frontend:
         if not isinstance(language, str) or not language.strip():
             raise ValueError("language must be a non-empty string")
-        for frontend in self._frontends:
+        candidates: list[tuple[int, int, Frontend]] = []
+        for index, frontend in enumerate(self._frontends):
+            metadata = getattr(frontend, "metadata", None)
+            if isinstance(metadata, FrontendMetadata):
+                if not metadata.matches_language(language):
+                    continue
+                if not metadata.matches_version(version) or not metadata.matches_extension(extension):
+                    continue
+                candidates.append((metadata.priority, -index, frontend))
+                continue
             if frontend.supports(language):
-                return frontend
-        raise LookupError(f"no frontend supports language {language!r}")
+                candidates.append((0, -index, frontend))
+        if not candidates:
+            raise LookupError(f"no frontend supports language {language!r}")
+        candidates.sort(reverse=True, key=lambda item: (item[0], item[1]))
+        return candidates[0][2]
 
     def languages(self) -> tuple[str, ...]:
         return tuple(frontend.language for frontend in self._frontends)
