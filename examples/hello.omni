@@ -1,0 +1,7 @@
+# Minimal native Omni source
+entity = application
+name = hello
+platform = semantic-artifact
+architecture = universal
+abi = universal
+entry = main
