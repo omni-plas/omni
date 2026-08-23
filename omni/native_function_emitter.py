@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from .native_prologue import build_frame_code
 from .native_binary_lowering import BinaryLowering, encode_binary
 from .native_machine_ops import mov_imm64, mov_rr
+from .elf64 import build_elf64
 
 @dataclass(frozen=True)
 class EmittedFunction:
@@ -26,3 +27,7 @@ def emit_function(name: str, stack_size: int, instructions=()) -> EmittedFunctio
         else:
             raise ValueError(f"unsupported native instruction: {instruction!r}")
     return EmittedFunction(name, frame.prologue + bytes(body) + frame.epilogue, stack_size)
+
+def emit_elf64(name: str, stack_size: int, instructions=(), entry_offset: int = 0) -> bytes:
+    emitted = emit_function(name, stack_size, instructions)
+    return build_elf64(emitted.code, entry_offset)
