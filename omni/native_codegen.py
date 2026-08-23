@@ -61,7 +61,7 @@ def _compile_ops(module: ModuleIR) -> bytes:
 
     registers: dict[str, int] = {}
     for (name, parameter_type), register in zip(function.parameters.items(), _SYSV_INTEGER_ARGUMENT_REGISTERS):
-        if parameter_type.kind.value not in {"i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64", "int", "uint"}:
+        if parameter_type.kind.value != "integer":
             raise NativeCodegenError(f"unsupported parameter type for {name}: {parameter_type}")
         registers[name] = register
 
@@ -115,8 +115,6 @@ def _compile_ops(module: ModuleIR) -> bytes:
             return_reg = registers[op.inputs[0]]
             if return_reg != 0:
                 code += _mov_rr(0, return_reg)
-            # Linux process entry has no caller return address. Convert the
-            # function result into the process exit status instead of RET.
             code += _mov_rr(7, 0)  # RDI = RAX
             code += _mov_imm64(0, 60)  # RAX = SYS_exit
             code += b"\x0F\x05"  # syscall
