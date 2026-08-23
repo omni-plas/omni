@@ -52,6 +52,7 @@ from .pipeline import CompilationResult, compile_semantics
 from .plugins import PluginRegistry
 from .release_pipeline import ReleasePipelineError, ReleaseResult, build_release, write_release
 from .runtime import RuntimeErrorBase, execute, execute_module
+from .self_build import SelfBuildError, SelfBuildResult, SelfBuildSpec, SelfBuildStage, plan_self_build, source_digest, validate_self_build_result
 from .semantics import SemanticModel
 from .serialization import SerializationError, dumps_uir, loads_uir
 from .source_model import SourceNode, SourceSpan, SourceUnit
@@ -76,11 +77,11 @@ __all__ = [
     "FrontendMetadata", "FrontendRegistry", "FilesystemMaterializationError", "FunctionIR", "GenericArtifactBackend", "InstallationError", "InstallationPlan", "InstallerBuildError",
     "InstallerBundle", "InstallerFormat", "InstallerKind", "InstallerRuntimeError", "InstallerTarget", "InstallerVerificationError", "LoweringError", "MaterializedArtifact", "MaterializedFile", "Materializer", "MaterializationError", "MaterializationPlan",
     "ModuleIR", "NativeArtifactBackend", "NativeCodegenError", "NativeExecutable", "OSImage", "OSImageError", "OSImageFile", "ParsedOSImage", "OmniError", "OmniFrontend", "OmniKeyword", "OmniNativeFrontend", "OmniProgram", "Operation", "OSBuildPlan", "OSModelError", "OperatingSystemSpec",
-    "PackageError", "PackageManifest", "PackageWriteError", "PluginRegistry", "ReleasePipelineError", "ReleaseResult", "RuntimeErrorBase", "SemanticModel",
+    "PackageError", "PackageManifest", "PackageWriteError", "PluginRegistry", "ReleasePipelineError", "ReleaseResult", "RuntimeErrorBase", "SemanticModel", "SelfBuildError", "SelfBuildResult", "SelfBuildSpec", "SelfBuildStage",
     "SemanticValidationError", "SerializationError", "Severity", "SourceCompilationResult", "SourceNode", "SourcePipelineError", "SourceSpan", "SourceUnit",
     "TargetBackend", "TargetDescriptor", "TargetMatch", "TargetModel", "TargetResolutionError", "Token", "TypeDiagnostic", "TypeKind", "TypeRef", "UIR",
     "UIRValidationError", "UniversalCompilationResult", "UniversalPipelineError", "ValidationError", "ValidationReport", "Value", "VerifiedBootResult", "apply_installer", "apply_target_context", "build_boot_artifact", "build_installer", "build_os_image", "build_package", "build_release", "build_verified_boot", "check_module", "compile_native", "compile_native_executable", "compile_semantics", "compile_universal",
     "compile_source", "compile_uir", "create_boot_manifest", "create_materialization_plan", "create_os_build_plan", "dumps_uir", "emit_c", "emit_with_backend", "emit_x86_64_elf", "entity_from_mapping",
-    "evaluate_capabilities", "execute", "execute_module", "extract_installer", "format_diagnostics", "inspect_installer", "is_valid", "loads_uir", "lower_to_ir", "manifest", "match", "materialize_to_directory", "optimize_module", "parse_os_image", "plan_compilation", "plan_construction", "plan_creation", "plan_installation", "read_artifact", "read_artifact_file",
-    "report", "require_boot_capabilities", "resolve_installer_target", "resolve_target", "tokenize", "validate_artifact_for_target", "validate_function", "validate_module", "validate_uir", "verify_boot_manifest", "verify_installer", "write_artifact", "write_installer", "write_native_executable", "write_package", "write_release",
+    "evaluate_capabilities", "execute", "execute_module", "extract_installer", "format_diagnostics", "inspect_installer", "is_valid", "loads_uir", "lower_to_ir", "manifest", "match", "materialize_to_directory", "optimize_module", "parse_os_image", "plan_compilation", "plan_construction", "plan_creation", "plan_installation", "read_artifact", "read_artifact_file", "plan_self_build", "source_digest",
+    "report", "require_boot_capabilities", "resolve_installer_target", "resolve_target", "tokenize", "validate_artifact_for_target", "validate_function", "validate_module", "validate_self_build_result", "validate_uir", "verify_boot_manifest", "verify_installer", "write_artifact", "write_installer", "write_native_executable", "write_package", "write_release",
 ]
