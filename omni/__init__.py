@@ -38,6 +38,7 @@ from .native_pipeline import compile_native
 from .omni_frontend import OmniFrontend
 from .optimize import optimize_module
 from .os_image import OSImage, OSImageError, build_os_image
+from .os_image_parse import OSImageFile, ParsedOSImage, parse_os_image
 from .os_model import OSModelError, OperatingSystemSpec
 from .package_writer import PackageWriteError, build_package, write_package
 from .packaging import PackageError, PackageManifest
@@ -66,13 +67,13 @@ __all__ = [
     "CompilationResult", "ConstructionPlan", "CreationPlan", "CreationStep", "Diagnostic", "DigitalSpec", "EmitterError", "EntitySpec", "Frontend",
     "FrontendRegistry", "FilesystemMaterializationError", "FunctionIR", "GenericArtifactBackend", "InstallationError", "InstallationPlan", "InstallerBuildError",
     "InstallerBundle", "InstallerFormat", "InstallerKind", "InstallerRuntimeError", "InstallerTarget", "InstallerVerificationError", "LoweringError", "MaterializedArtifact", "MaterializedFile", "Materializer", "MaterializationError", "MaterializationPlan",
-    "ModuleIR", "NativeArtifactBackend", "NativeCodegenError", "NativeExecutable", "OSImage", "OSImageError", "OmniError", "OmniFrontend", "OmniKeyword", "OmniNativeFrontend", "OmniProgram", "Operation", "OSBuildPlan", "OSModelError", "OperatingSystemSpec",
+    "ModuleIR", "NativeArtifactBackend", "NativeCodegenError", "NativeExecutable", "OSImage", "OSImageError", "OSImageFile", "ParsedOSImage", "OmniError", "OmniFrontend", "OmniKeyword", "OmniNativeFrontend", "OmniProgram", "Operation", "OSBuildPlan", "OSModelError", "OperatingSystemSpec",
     "PackageError", "PackageManifest", "PackageWriteError", "PluginRegistry", "ReleasePipelineError", "ReleaseResult", "RuntimeErrorBase", "SemanticModel",
     "SemanticValidationError", "SerializationError", "Severity", "SourceCompilationResult", "SourceNode", "SourcePipelineError", "SourceSpan", "SourceUnit",
     "TargetBackend", "TargetDescriptor", "TargetMatch", "TargetModel", "TargetResolutionError", "Token", "TypeDiagnostic", "TypeKind", "TypeRef", "UIR",
     "UIRValidationError", "ValidationError", "ValidationReport", "Value", "apply_installer", "build_installer", "build_os_image", "build_package", "build_release", "check_module", "compile_native", "compile_native_executable", "compile_semantics",
     "compile_source", "compile_uir", "create_materialization_plan", "create_os_build_plan", "dumps_uir", "emit_c", "emit_with_backend", "emit_x86_64_elf", "entity_from_mapping",
-    "evaluate_capabilities", "execute", "execute_module", "extract_installer", "format_diagnostics", "inspect_installer", "is_valid", "loads_uir", "lower_to_ir", "manifest", "match", "read_artifact", "read_artifact_file",
+    "evaluate_capabilities", "execute", "execute_module", "extract_installer", "format_diagnostics", "inspect_installer", "is_valid", "loads_uir", "lower_to_ir", "manifest", "match", "parse_os_image", "read_artifact", "read_artifact_file",
     "materialize_to_directory", "optimize_module", "plan_compilation", "plan_construction", "plan_creation", "plan_installation", "report", "resolve_installer_target", "resolve_target", "tokenize", "validate_artifact_for_target",
     "validate_materialized_artifact", "validate_function", "validate_module", "validate_uir", "verify_installer", "write_artifact", "write_installer", "write_native_executable", "write_package", "write_release",
 ]
