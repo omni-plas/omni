@@ -43,6 +43,7 @@ from .semantics import SemanticModel
 from .serialization import SerializationError, dumps_uir, loads_uir
 from .source_model import SourceNode, SourceSpan, SourceUnit
 from .source_pipeline import SourceCompilationResult, SourcePipelineError, compile_source
+from .target_artifact import validate_artifact_for_target
 from .target_model import TargetModel
 from .targeting import TargetMatch, TargetResolutionError, resolve_target
 from .targets import TargetDescriptor
@@ -65,6 +66,6 @@ __all__ = [
     "UIRValidationError", "ValidationError", "ValidationReport", "Value", "build_installer", "build_package", "build_release", "check_module", "compile_native", "compile_semantics",
     "compile_source", "compile_uir", "create_materialization_plan", "create_os_build_plan", "dumps_uir", "emit_c", "emit_with_backend", "entity_from_mapping",
     "evaluate_capabilities", "execute", "execute_module", "format_diagnostics", "is_valid", "loads_uir", "lower_to_ir", "manifest", "match", "read_artifact", "read_artifact_file",
-    "materialize_to_directory", "optimize_module", "plan_compilation", "plan_construction", "plan_creation", "plan_installation", "report", "resolve_target",
-    "tokenize", "validate_materialized_artifact", "validate_function", "validate_module", "validate_uir", "write_artifact", "write_installer", "write_package", "write_release",
+    "materialize_to_directory", "optimize_module", "plan_compilation", "plan_construction", "plan_creation", "plan_installation", "report", "resolve_target", "tokenize",
+    "validate_artifact_for_target", "validate_materialized_artifact", "validate_function", "validate_module", "validate_uir", "write_artifact", "write_installer", "write_package", "write_release",
 ]
