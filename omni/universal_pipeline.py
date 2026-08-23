@@ -7,6 +7,7 @@ from typing import Any
 from .backend import BackendRegistry
 from .compiler import CompilationPlan
 from .frontend import FrontendRegistry
+from .target_context import apply_target_context
 from .targets import TargetDescriptor
 
 
@@ -36,11 +37,13 @@ def compile_universal(
         raise TypeError("source must be a string")
     if not isinstance(language, str) or not language.strip():
         raise ValueError("language must be a non-empty string")
+    if not isinstance(target, TargetDescriptor):
+        raise TypeError("target must be a TargetDescriptor")
     frontend = frontends.resolve(language)
-    uir = frontend.parse(source, filename=filename)
+    raw_uir = frontend.parse(source, filename=filename)
+    uir = apply_target_context(raw_uir, target)
     from .compile_engine import compile_uir
-    # The frontend produces UIR; compilation remains target/backend driven.
     result = compile_uir(uir, backends)
     if result.plan.target != target:
-        raise UniversalPipelineError("frontend compilation target does not match requested target")
+        raise UniversalPipelineError("compiler produced an artifact for an unexpected target")
     return UniversalCompilationResult(language, frontend.language, result.plan, result.backend_name, result.artifact)
