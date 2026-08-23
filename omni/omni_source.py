@@ -24,6 +24,8 @@ class Call: callee:str; arguments:tuple[object,...]
 @dataclass(frozen=True)
 class Let: name:str; value:object
 @dataclass(frozen=True)
+class Assign: name:str; value:object
+@dataclass(frozen=True)
 class Return: value:object
 @dataclass(frozen=True)
 class If: condition:object; then_body:tuple[object,...]; else_body:tuple[object,...]
@@ -37,8 +39,7 @@ _KEYWORDS={"fn":TokenKind.FN,"let":TokenKind.LET,"return":TokenKind.RETURN,"true
 
 def tokenize(source:str)->tuple[Token,...]:
     if not isinstance(source,str): raise TypeError("source must be a string")
-    tokens=[]; i=0; line=column=1
-    two={"==":TokenKind.EQEQ,"!=":TokenKind.NE,"<=":TokenKind.LE,">=":TokenKind.GE,"&&":TokenKind.AND,"||":TokenKind.OR}
+    tokens=[]; i=0; line=column=1; two={"==":TokenKind.EQEQ,"!=":TokenKind.NE,"<=":TokenKind.LE,">=":TokenKind.GE,"&&":TokenKind.AND,"||":TokenKind.OR}
     one={"(":TokenKind.LPAREN,")":TokenKind.RPAREN,"{":TokenKind.LBRACE,"}":TokenKind.RBRACE,",":TokenKind.COMMA,";":TokenKind.SEMICOLON,"=":TokenKind.EQUAL,"+":TokenKind.PLUS,"-":TokenKind.MINUS,"*":TokenKind.STAR,"/":TokenKind.SLASH,"<":TokenKind.LT,">":TokenKind.GT,"!":TokenKind.NOT}
     while i<len(source):
         ch=source[i]
@@ -103,6 +104,8 @@ class Parser:
     def statement(self):
         if self.accept(TokenKind.LET):
             name=self.take(TokenKind.IDENT).text; self.take(TokenKind.EQUAL); node=Let(name,self.expression()); self.accept(TokenKind.SEMICOLON); return node
+        if self.current().kind==TokenKind.IDENT and self.tokens[self.index+1].kind==TokenKind.EQUAL:
+            name=self.take(TokenKind.IDENT).text; self.take(TokenKind.EQUAL); node=Assign(name,self.expression()); self.accept(TokenKind.SEMICOLON); return node
         if self.accept(TokenKind.RETURN):
             node=Return(self.expression()); self.accept(TokenKind.SEMICOLON); return node
         if self.accept(TokenKind.IF):
@@ -121,8 +124,7 @@ class Parser:
         return node
     def comparison(self):
         node=self.term()
-        while self.current().kind in (TokenKind.EQEQ,TokenKind.NE,TokenKind.LT,TokenKind.LE,TokenKind.GT,TokenKind.GE):
-            op=self.current().kind; self.index+=1; node=Binary(node,op,self.term())
+        while self.current().kind in (TokenKind.EQEQ,TokenKind.NE,TokenKind.LT,TokenKind.LE,TokenKind.GT,TokenKind.GE): op=self.current().kind; self.index+=1; node=Binary(node,op,self.term())
         return node
     def term(self):
         node=self.factor()
