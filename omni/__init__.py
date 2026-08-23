@@ -20,6 +20,7 @@ from .errors import CapabilityError, LoweringError, OmniError, ValidationError
 from .frontend import Frontend, FrontendRegistry
 from .fs_materializer import FilesystemMaterializationError, MaterializedFile, materialize_to_directory
 from .installer import InstallationError, InstallationPlan, InstallerKind, plan_installation
+from .installer_apply import apply_installer
 from .installer_builder import InstallerBuildError, InstallerBundle, build_installer, write_installer
 from .installer_runtime import InstallerRuntimeError, extract_installer, inspect_installer
 from .installer_verify import InstallerVerificationError, verify_installer
@@ -67,7 +68,7 @@ __all__ = [
     "PackageError", "PackageManifest", "PackageWriteError", "PluginRegistry", "ReleasePipelineError", "ReleaseResult", "RuntimeErrorBase", "SemanticModel",
     "SemanticValidationError", "SerializationError", "Severity", "SourceCompilationResult", "SourceNode", "SourcePipelineError", "SourceSpan", "SourceUnit",
     "TargetBackend", "TargetDescriptor", "TargetMatch", "TargetModel", "TargetResolutionError", "Token", "TypeDiagnostic", "TypeKind", "TypeRef", "UIR",
-    "UIRValidationError", "ValidationError", "ValidationReport", "Value", "build_installer", "build_package", "build_release", "check_module", "compile_native", "compile_native_executable", "compile_semantics",
+    "UIRValidationError", "ValidationError", "ValidationReport", "Value", "apply_installer", "build_installer", "build_package", "build_release", "check_module", "compile_native", "compile_native_executable", "compile_semantics",
     "compile_source", "compile_uir", "create_materialization_plan", "create_os_build_plan", "dumps_uir", "emit_c", "emit_with_backend", "emit_x86_64_elf", "entity_from_mapping",
     "evaluate_capabilities", "execute", "execute_module", "extract_installer", "format_diagnostics", "inspect_installer", "is_valid", "loads_uir", "lower_to_ir", "manifest", "match", "read_artifact", "read_artifact_file",
     "materialize_to_directory", "optimize_module", "plan_compilation", "plan_construction", "plan_creation", "plan_installation", "report", "resolve_target", "tokenize", "validate_artifact_for_target",
