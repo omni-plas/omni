@@ -3,7 +3,7 @@ from omni.runtime import execute
 
 
 def test_while_loop_executes_and_mutates_local():
-    module = lower_source('fn main() { let x = 0; while (x < 5) { let x = x + 1; } return x; }')
+    module = lower_source('fn main() { let x = 0; while (x < 5) { x = x + 1; } return x; }')
     assert execute(module.functions[0]) == 5
 
 
