@@ -10,11 +10,10 @@ from pathlib import Path
 from .diagnostics import format_diagnostics
 from .emitters import EmitterError, emit_c
 from .errors import OmniError
-from .frontend import FrontendRegistry
 from .installer import InstallerKind, plan_installation
 from .lower import lower_to_ir
+from .native_artifact import compile_native_artifact
 from .native_frontend import OmniNativeFrontend
-from .omni_frontend import OmniFrontend
 from .pipeline import compile_semantics
 from .runtime import execute_module
 from .serialization import loads_uir
@@ -28,9 +27,12 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("source", type=Path)
     run.add_argument("--entry", default=None)
     run.add_argument("--args", default="{}", help="JSON object containing entry arguments")
-    validate = subparsers.add_parser("validate", help="validate a UIR JSON program without executing it")
+    validate = subparsers.add_parser("validate", help="validate a source program")
     validate.add_argument("source", type=Path)
     validate.add_argument("--language", default="uir-json", choices=("uir-json", "omni"))
+    build = subparsers.add_parser("build", help="build native Omni source into a portable artifact")
+    build.add_argument("source", type=Path)
+    build.add_argument("-o", "--output", type=Path, required=True)
     emit = subparsers.add_parser("emit-c", help="emit a UIR program as C99 source")
     emit.add_argument("source", type=Path)
     emit.add_argument("output", type=Path)
@@ -64,36 +66,14 @@ def _metadata(values: list[str]) -> dict[str, str]:
 
 def _installation_json(args: argparse.Namespace) -> str:
     target = TargetDescriptor(args.target, args.architecture, args.abi)
-    plan = plan_installation(
-        target,
-        kind=InstallerKind(args.kind),
-        artifact_format=args.artifact_format,
-        bootable=args.bootable,
-        filesystem=args.filesystem,
-        artifacts=tuple(args.artifact),
-        metadata=_metadata(args.metadata),
-    )
+    plan = plan_installation(target, kind=InstallerKind(args.kind), artifact_format=args.artifact_format, bootable=args.bootable, filesystem=args.filesystem, artifacts=tuple(args.artifact), metadata=_metadata(args.metadata))
     if args.manifest:
         return plan.render_manifest()
-    return json.dumps(
-        {
-            "identity": plan.identity(),
-            "target": plan.target.identity(),
-            "kind": plan.kind.value,
-            "artifact_format": plan.artifact_format,
-            "bootable": plan.bootable,
-            "filesystem": plan.filesystem,
-            "artifacts": list(plan.artifacts),
-            "metadata": dict(plan.metadata),
-        },
-        ensure_ascii=False,
-        sort_keys=True,
-    )
+    return json.dumps({"identity": plan.identity(), "target": plan.target.identity(), "kind": plan.kind.value, "artifact_format": plan.artifact_format, "bootable": plan.bootable, "filesystem": plan.filesystem, "artifacts": list(plan.artifacts), "metadata": dict(plan.metadata)}, ensure_ascii=False, sort_keys=True)
 
 
 def _validate_native(path: Path) -> int:
-    source = path.read_text(encoding="utf-8")
-    uir = OmniNativeFrontend().parse(source, filename=str(path))
+    uir = OmniNativeFrontend().parse(path.read_text(encoding="utf-8"), filename=str(path))
     print(json.dumps(uir.to_dict(), ensure_ascii=False, sort_keys=True))
     return 0
 
@@ -103,6 +83,11 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "install-plan":
             print(_installation_json(args), end="" if args.manifest else "\n")
+            return 0
+        if args.command == "build":
+            artifact = compile_native_artifact(args.source.read_text(encoding="utf-8"), filename=str(args.source))
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_bytes(artifact.payload)
             return 0
         if args.command == "validate" and args.language == "omni":
             return _validate_native(args.source)
