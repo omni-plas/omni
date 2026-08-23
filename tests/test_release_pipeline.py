@@ -5,7 +5,7 @@ import pytest
 
 from omni.installer import InstallerKind, plan_installation
 from omni.packaging import PackageManifest
-from omni.release_pipeline import ReleasePipelineError, build_release
+from omni.release_pipeline import ReleasePipelineError, build_release, write_release
 from omni.targets import TargetDescriptor
 
 
@@ -56,3 +56,19 @@ def test_release_requires_declared_package_filename():
     plan = plan_installation(target, artifact_format="pkg", artifacts=("other.omni",))
     with pytest.raises(ReleasePipelineError, match="filename"):
         build_release(package, plan, {"image": b"x"})
+
+
+def test_write_release_rejects_path_traversal(tmp_path):
+    target = TargetDescriptor("os")
+    package = PackageManifest("os", "1", target, artifacts=("image",))
+    plan = plan_installation(target, artifact_format="pkg", artifacts=("package.omni",))
+    with pytest.raises(ReleasePipelineError, match="plain filename"):
+        write_release(tmp_path, package, plan, {"image": b"x"}, package_filename="../package.omni")
+
+
+def test_write_release_rejects_same_output_name(tmp_path):
+    target = TargetDescriptor("os")
+    package = PackageManifest("os", "1", target, artifacts=("package.omni",))
+    plan = plan_installation(target, artifact_format="pkg", artifacts=("package.omni",))
+    with pytest.raises(ReleasePipelineError, match="filenames must differ"):
+        write_release(tmp_path, package, plan, {"package.omni": b"x"}, installer_filename="package.omni")
