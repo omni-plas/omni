@@ -1,5 +1,4 @@
 """Core tokenizer and parser for the textual Omni language."""
-
 from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
@@ -7,9 +6,9 @@ from enum import Enum
 class OmniSyntaxError(ValueError): pass
 class TokenKind(str, Enum):
     IDENT="ident"; INTEGER="integer"; STRING="string"; TRUE="true"; FALSE="false"
-    FN="fn"; LET="let"; RETURN="return"; IF="if"; ELSE="else"
+    FN="fn"; LET="let"; RETURN="return"; IF="if"; ELSE="else"; WHILE="while"
     LPAREN="("; RPAREN=")"; LBRACE="{"; RBRACE="}"; COMMA=","; COLON=":"; SEMICOLON=";"; EQUAL="="
-    PLUS="+"; MINUS="-"; STAR="*"; SLASH="/"; EQEQ="=="; NE="!="; LT="<"; LE="<="; GT=">"; GE=">="; EOF="eof"
+    PLUS="+"; MINUS="-"; STAR="*"; SLASH="/"; EQEQ="=="; NE="!="; LT="<"; LE="<="; GT=">"; GE=">="; AND="&&"; OR="||"; NOT="!"; EOF="eof"
 @dataclass(frozen=True)
 class Token: kind:TokenKind; text:str; line:int; column:int
 @dataclass(frozen=True)
@@ -19,6 +18,8 @@ class Name: value:str
 @dataclass(frozen=True)
 class Binary: left:object; operator:TokenKind; right:object
 @dataclass(frozen=True)
+class Unary: operator:TokenKind; operand:object
+@dataclass(frozen=True)
 class Call: callee:str; arguments:tuple[object,...]
 @dataclass(frozen=True)
 class Let: name:str; value:object
@@ -27,17 +28,18 @@ class Return: value:object
 @dataclass(frozen=True)
 class If: condition:object; then_body:tuple[object,...]; else_body:tuple[object,...]
 @dataclass(frozen=True)
+class While: condition:object; body:tuple[object,...]
+@dataclass(frozen=True)
 class Function: name:str; parameters:tuple[str,...]; body:tuple[object,...]
 @dataclass(frozen=True)
 class Program: functions:tuple[Function,...]
-_KEYWORDS={"fn":TokenKind.FN,"let":TokenKind.LET,"return":TokenKind.RETURN,"true":TokenKind.TRUE,"false":TokenKind.FALSE,"if":TokenKind.IF,"else":TokenKind.ELSE}
-
+_KEYWORDS={"fn":TokenKind.FN,"let":TokenKind.LET,"return":TokenKind.RETURN,"true":TokenKind.TRUE,"false":TokenKind.FALSE,"if":TokenKind.IF,"else":TokenKind.ELSE,"while":TokenKind.WHILE}
 
 def tokenize(source:str)->tuple[Token,...]:
     if not isinstance(source,str): raise TypeError("source must be a string")
     tokens=[]; i=0; line=column=1
-    two={"==":TokenKind.EQEQ,"!=":TokenKind.NE,"<=":TokenKind.LE,">=":TokenKind.GE}
-    one={"(":TokenKind.LPAREN,")":TokenKind.RPAREN,"{":TokenKind.LBRACE,"}":TokenKind.RBRACE,",":TokenKind.COMMA,";":TokenKind.SEMICOLON,"=":TokenKind.EQUAL,"+":TokenKind.PLUS,"-":TokenKind.MINUS,"*":TokenKind.STAR,"/":TokenKind.SLASH,"<":TokenKind.LT,">":TokenKind.GT}
+    two={"==":TokenKind.EQEQ,"!=":TokenKind.NE,"<=":TokenKind.LE,">=":TokenKind.GE,"&&":TokenKind.AND,"||":TokenKind.OR}
+    one={"(":TokenKind.LPAREN,")":TokenKind.RPAREN,"{":TokenKind.LBRACE,"}":TokenKind.RBRACE,",":TokenKind.COMMA,";":TokenKind.SEMICOLON,"=":TokenKind.EQUAL,"+":TokenKind.PLUS,"-":TokenKind.MINUS,"*":TokenKind.STAR,"/":TokenKind.SLASH,"<":TokenKind.LT,">":TokenKind.GT,"!":TokenKind.NOT}
     while i<len(source):
         ch=source[i]
         if ch in " \t\r": i+=1; column+=1; continue
@@ -45,8 +47,7 @@ def tokenize(source:str)->tuple[Token,...]:
         if source.startswith("//",i):
             while i<len(source) and source[i]!="\n": i+=1; column+=1
             continue
-        sl,sc=line,column
-        pair=source[i:i+2]
+        sl,sc=line,column; pair=source[i:i+2]
         if pair in two: tokens.append(Token(two[pair],pair,sl,sc)); i+=2; column+=2; continue
         if ch.isalpha() or ch=="_":
             j=i+1
@@ -94,11 +95,10 @@ class Parser:
             while True:
                 ps.append(self.take(TokenKind.IDENT).text)
                 if not self.accept(TokenKind.COMMA): break
-        self.take(TokenKind.RPAREN); body=self.block(); return Function(name,tuple(ps),body)
+        self.take(TokenKind.RPAREN); return Function(name,tuple(ps),self.block())
     def block(self):
         self.take(TokenKind.LBRACE); body=[]
-        while self.current().kind!=TokenKind.RBRACE:
-            body.append(self.statement())
+        while self.current().kind!=TokenKind.RBRACE: body.append(self.statement())
         self.take(TokenKind.RBRACE); return tuple(body)
     def statement(self):
         if self.accept(TokenKind.LET):
@@ -107,22 +107,37 @@ class Parser:
             node=Return(self.expression()); self.accept(TokenKind.SEMICOLON); return node
         if self.accept(TokenKind.IF):
             self.take(TokenKind.LPAREN); cond=self.expression(); self.take(TokenKind.RPAREN); then=self.block(); other=self.block() if self.accept(TokenKind.ELSE) else (); return If(cond,then,other)
+        if self.accept(TokenKind.WHILE):
+            self.take(TokenKind.LPAREN); cond=self.expression(); self.take(TokenKind.RPAREN); return While(cond,self.block())
         t=self.current(); raise OmniSyntaxError(f"expected statement at {t.line}:{t.column}")
-    def expression(self): return self.comparison()
+    def expression(self): return self.logical_or()
+    def logical_or(self):
+        node=self.logical_and()
+        while self.accept(TokenKind.OR): node=Binary(node,TokenKind.OR,self.logical_and())
+        return node
+    def logical_and(self):
+        node=self.comparison()
+        while self.accept(TokenKind.AND): node=Binary(node,TokenKind.AND,self.comparison())
+        return node
     def comparison(self):
         node=self.term()
         while self.current().kind in (TokenKind.EQEQ,TokenKind.NE,TokenKind.LT,TokenKind.LE,TokenKind.GT,TokenKind.GE):
             op=self.current().kind; self.index+=1; node=Binary(node,op,self.term())
         return node
     def term(self):
+        node=self.factor()
+        while self.current().kind in (TokenKind.PLUS,TokenKind.MINUS): op=self.current().kind; self.index+=1; node=Binary(node,op,self.factor())
+        return node
+    def factor(self):
         node=self.primary()
-        while self.current().kind in (TokenKind.PLUS,TokenKind.MINUS): op=self.current().kind; self.index+=1; node=Binary(node,op,self.primary())
+        while self.current().kind in (TokenKind.STAR,TokenKind.SLASH): op=self.current().kind; self.index+=1; node=Binary(node,op,self.primary())
         return node
     def primary(self):
         t=self.current()
         if t.kind==TokenKind.INTEGER: self.index+=1; return Literal(int(t.text))
         if t.kind==TokenKind.STRING: self.index+=1; return Literal(t.text)
         if t.kind in (TokenKind.TRUE,TokenKind.FALSE): self.index+=1; return Literal(t.kind==TokenKind.TRUE)
+        if t.kind==TokenKind.NOT: self.index+=1; return Unary(TokenKind.NOT,self.primary())
         if t.kind==TokenKind.IDENT:
             self.index+=1
             if self.accept(TokenKind.LPAREN):
