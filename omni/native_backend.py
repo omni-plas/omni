@@ -11,6 +11,7 @@ from .backend import BackendError
 from .compiler import CompilationPlan
 from .targets import TargetDescriptor
 from .uir import UIR
+from .native_allocating_emitter import PreparedNativeFunction, prepare_native_function
 
 _MAGIC = b"OMNIART1"
 
@@ -31,6 +32,11 @@ class NativeArtifactBackend:
         header = _MAGIC + struct.pack(">I", len(document)) + digest
         payload = header + document
         return Artifact("portable-entity", uir.entity_kind, plan.target, "omni-artifact", payload=payload)
+
+
+def prepare_native_function_for_backend(function, registers=(3, 4, 5, 10, 11, 12, 13, 14, 15)) -> PreparedNativeFunction:
+    """Prepare a function with the shared native allocator before emission."""
+    return prepare_native_function(function, registers)
 
 
 def read_artifact(payload: bytes) -> dict:
