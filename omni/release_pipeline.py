@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping
@@ -26,6 +28,15 @@ class ReleaseResult:
     installer_digest: str
 
 
+def _safe_filename(value: str, field: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ReleasePipelineError(f"{field} must be a non-empty filename")
+    path = Path(value)
+    if path.name != value or value in {".", ".."}:
+        raise ReleasePipelineError(f"{field} must be a plain filename")
+    return value
+
+
 def build_release(
     package_manifest: PackageManifest,
     installation_plan: InstallationPlan,
@@ -38,9 +49,10 @@ def build_release(
         raise TypeError("package_manifest must be a PackageManifest")
     if not isinstance(installation_plan, InstallationPlan):
         raise TypeError("installation_plan must be an InstallationPlan")
+    package_filename = _safe_filename(package_filename, "package_filename")
     if package_manifest.target != installation_plan.target:
         raise ReleasePipelineError("package and installation targets must match")
-    if package_filename.strip() not in installation_plan.artifacts:
+    if package_filename not in installation_plan.artifacts:
         raise ReleasePipelineError("installation plan must declare the package filename")
 
     package_payload = build_package(package_manifest, entries)
@@ -62,11 +74,23 @@ def write_release(
     installer_filename: str = "installer.omni",
 ) -> ReleaseResult:
     """Build a release and atomically write both package and installer files."""
+    package_filename = _safe_filename(package_filename, "package_filename")
+    installer_filename = _safe_filename(installer_filename, "installer_filename")
+    if package_filename == installer_filename:
+        raise ReleasePipelineError("package and installer filenames must differ")
     result = build_release(package_manifest, installation_plan, entries, package_filename=package_filename)
     directory = Path(output_directory)
     directory.mkdir(parents=True, exist_ok=True)
     package_path = directory / package_filename
     installer_path = directory / installer_filename
-    package_path.write_bytes(result.package_payload)
-    installer_path.write_bytes(result.installer.payload)
+    temporary_package = directory / f".{package_filename}.{uuid.uuid4().hex}.tmp"
+    temporary_installer = directory / f".{installer_filename}.{uuid.uuid4().hex}.tmp"
+    try:
+        temporary_package.write_bytes(result.package_payload)
+        temporary_installer.write_bytes(result.installer.payload)
+        os.replace(temporary_package, package_path)
+        os.replace(temporary_installer, installer_path)
+    finally:
+        temporary_package.unlink(missing_ok=True)
+        temporary_installer.unlink(missing_ok=True)
     return result
