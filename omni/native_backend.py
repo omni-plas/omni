@@ -1,10 +1,4 @@
-"""Deterministic executable-shaped backend for the native Omni bootstrap.
-
-This backend deliberately emits a self-describing portable artifact rather than
-pretending that a semantic JSON document is a native executable.  The container
-is stable and can later be consumed by a true machine-code backend without
-changing the frontend or compilation contracts.
-"""
+"""Deterministic portable artifact backend for the native Omni bootstrap."""
 
 from __future__ import annotations
 
