@@ -30,15 +30,18 @@ def _safe_path(path: str) -> str:
     return str(p)
 
 
-def build_os_image(target: TargetDescriptor, files: dict[str, bytes]) -> OSImage:
+def build_os_image(target: TargetDescriptor, files: dict[str, bytes], *, boot_contract=None) -> OSImage:
     """Build a deterministic Omni OS image container.
 
-    This is an image format owned by Omni; it deliberately does not pretend to
-    be a native disk image until a target backend supplies the required boot,
-    filesystem, ABI and firmware semantics.
+    A target-neutral image is not claimed to be bootable by itself. When a
+    BootContract is supplied, its target and required boot capabilities are
+    validated before image creation.
     """
     if not files:
         raise OSImageError("OS image must contain at least one file")
+    if boot_contract is not None:
+        from .boot_contract import require_boot_capabilities
+        require_boot_capabilities(target, boot_contract)
     entries: list[tuple[str, bytes]] = []
     for name, data in files.items():
         safe = _safe_path(name)
@@ -50,6 +53,12 @@ def build_os_image(target: TargetDescriptor, files: dict[str, bytes]) -> OSImage
         "format": "omni-os-image-v1",
         "target": target.to_document(),
         "file_count": len(entries),
+        "boot_contract": None if boot_contract is None else {
+            "boot_protocol": boot_contract.boot_protocol,
+            "firmware": boot_contract.firmware,
+            "filesystem": boot_contract.filesystem,
+            "entrypoint": boot_contract.entrypoint,
+        },
     }
     out = bytearray(b"OMNIOS1\0")
     encoded = json.dumps(header, sort_keys=True, separators=(",", ":")).encode()
