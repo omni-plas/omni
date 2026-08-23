@@ -11,6 +11,7 @@ from .diagnostics import format_diagnostics
 from .emitters import EmitterError, emit_c
 from .errors import OmniError
 from .installer import InstallerKind, plan_installation
+from .installer_apply import apply_installer
 from .installer_runtime import extract_installer, inspect_installer
 from .lower import lower_to_ir
 from .native_artifact import compile_native_artifact
@@ -59,6 +60,10 @@ def build_parser() -> argparse.ArgumentParser:
     extract = subparsers.add_parser("installer-extract", help="safely extract the verified package from an Omni installer")
     extract.add_argument("installer", type=Path)
     extract.add_argument("destination", type=Path)
+    apply = subparsers.add_parser("installer-apply", help="validate and atomically install the verified package")
+    apply.add_argument("installer", type=Path)
+    apply.add_argument("destination", type=Path)
+    apply.add_argument("--overwrite", action="store_true")
     return parser
 
 
@@ -101,6 +106,10 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if args.command == "installer-extract":
             path = extract_installer(args.installer.read_bytes(), args.destination)
+            print(path)
+            return 0
+        if args.command == "installer-apply":
+            path = apply_installer(args.installer.read_bytes(), args.destination, overwrite=args.overwrite)
             print(path)
             return 0
         if args.command == "build":
