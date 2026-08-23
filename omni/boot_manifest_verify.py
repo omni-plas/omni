@@ -10,7 +10,7 @@ from .os_image import OSImageError
 
 
 def verify_boot_manifest(artifact: BootArtifact, manifest: BootManifest) -> None:
-    if artifact.target.to_document() != manifest.target:
+    if artifact.target.document() != manifest.target:
         raise OSImageError("boot artifact target does not match manifest")
     if artifact.format != manifest.artifact_format:
         raise OSImageError("boot artifact format does not match manifest")
