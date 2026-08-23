@@ -27,6 +27,7 @@ from .lower import lower_to_ir
 from .materialize import MaterializedArtifact, Materializer, validate_materialized_artifact
 from .materializer import MaterializationError, MaterializationPlan, create_materialization_plan
 from .native_frontend import OmniNativeFrontend
+from .native_pipeline import compile_native
 from .omni_frontend import OmniFrontend
 from .optimize import optimize_module
 from .os_model import OSModelError, OperatingSystemSpec
@@ -59,7 +60,7 @@ __all__ = [
     "PackageError", "PackageManifest", "PackageWriteError", "PluginRegistry", "ReleasePipelineError", "ReleaseResult", "RuntimeErrorBase", "SemanticModel",
     "SemanticValidationError", "SerializationError", "Severity", "SourceCompilationResult", "SourceNode", "SourcePipelineError", "SourceSpan", "SourceUnit",
     "TargetBackend", "TargetDescriptor", "TargetMatch", "TargetModel", "TargetResolutionError", "Token", "TypeDiagnostic", "TypeKind", "TypeRef", "UIR",
-    "UIRValidationError", "ValidationError", "ValidationReport", "Value", "build_installer", "build_package", "build_release", "check_module", "compile_semantics",
+    "UIRValidationError", "ValidationError", "ValidationReport", "Value", "build_installer", "build_package", "build_release", "check_module", "compile_native", "compile_semantics",
     "compile_source", "compile_uir", "create_materialization_plan", "create_os_build_plan", "dumps_uir", "emit_c", "emit_with_backend", "entity_from_mapping",
     "evaluate_capabilities", "execute", "execute_module", "format_diagnostics", "is_valid", "loads_uir", "lower_to_ir", "manifest", "match",
     "materialize_to_directory", "optimize_module", "plan_compilation", "plan_construction", "plan_creation", "plan_installation", "report", "resolve_target",
