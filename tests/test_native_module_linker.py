@@ -1,4 +1,4 @@
-from omni.native_module_linker import NativeFragment, link_fragments
+from omni.native_module_linker import NativeFragment, link_fragments, link_with_external_targets
 from dataclasses import dataclass
 
 @dataclass(frozen=True)
@@ -24,3 +24,8 @@ def test_symbol_call_relocation_resolves_against_function_symbol():
 def test_symbol_abs64_relocation_resolves():
     linked=link_fragments((NativeFragment("main",b"\x00"*8,symbol_relocations=(R("abs64",0,"data"),)),NativeFragment("data",b"abc")))
     assert int.from_bytes(linked.code[:8],'little')==8
+
+
+def test_external_symbol_can_resolve_call():
+    linked=link_with_external_targets((NativeFragment("main",b"\xe8\x00\x00\x00\x00",symbol_relocations=(R("call_rel32",1,"runtime",instruction_end=5),)),),{"runtime":20})
+    assert int.from_bytes(linked.code[1:5],'little',signed=True)==15
