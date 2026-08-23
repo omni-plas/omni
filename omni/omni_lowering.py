@@ -1,13 +1,11 @@
 """Semantic lowering from textual Omni AST to target-neutral IR."""
 from __future__ import annotations
 from .ir import BasicBlock, FunctionIR, ModuleIR, Operation
-from .omni_source import Binary, Call, Function, If, Let, Literal, Name, Program, Return, Unary, While
+from .omni_source import Assign, Binary, Call, Function, If, Let, Literal, Name, Program, Return, Unary, While
 from .types import TypeKind, TypeRef
-
 class OmniLoweringError(ValueError): pass
 _INT=TypeRef(TypeKind.INTEGER); _STRING=TypeRef(TypeKind.STRING); _BOOL=TypeRef(TypeKind.BOOL); _VOID=TypeRef(TypeKind.VOID)
 _COMPARISONS={"==":"eq","!=":"ne","<":"lt","<=":"le",">":"gt",">=":"ge"}
-
 def _expr(node,env,operations,counter,signatures):
     if isinstance(node,Literal):
         value=node.value; typ=_BOOL if isinstance(value,bool) else _INT if isinstance(value,int) and not isinstance(value,bool) else _STRING if isinstance(value,str) else None
@@ -39,7 +37,6 @@ def _expr(node,env,operations,counter,signatures):
         args=[_expr(argument,env,operations,counter,signatures)[0] for argument in node.arguments]
         name=f"%v{counter[0]}"; counter[0]+=1; operations.append(Operation("call",inputs=tuple(args),outputs=(name,),attributes={"callee":node.callee,"type":result_type.signature()})); env[name]=result_type; return name,result_type
     raise OmniLoweringError(f"unsupported expression node: {type(node).__name__}")
-
 def _function(function,signatures):
     env={name:_INT for name in function.parameters}; counter=[0]; blocks=[]; index=[0]; current=None; result_type=_VOID
     def new(prefix):
@@ -47,54 +44,47 @@ def _function(function,signatures):
     current=new("entry")
     def stmt(s):
         nonlocal current,result_type
-        if current is None: return
+        if current is None:return
         if isinstance(s,Let):
             value,typ=_expr(s.value,env,current["operations"],counter,signatures)
             if s.name in env: raise OmniLoweringError(f"duplicate local: {s.name}")
             env[s.name]=typ; current["operations"].append(Operation("move",inputs=(value,),outputs=(s.name,),attributes={"type":typ.signature()})); return
+        if isinstance(s,Assign):
+            if s.name not in env: raise OmniLoweringError(f"undefined assignment target: {s.name}")
+            value,typ=_expr(s.value,env,current["operations"],counter,signatures)
+            if typ!=env[s.name]: raise OmniLoweringError(f"assignment type mismatch: {s.name}")
+            current["operations"].append(Operation("move",inputs=(value,),outputs=(s.name,),attributes={"type":typ.signature()})); return
         if isinstance(s,Return):
             value,result_type=_expr(s.value,env,current["operations"],counter,signatures); current["operations"].append(Operation("return",inputs=(value,))); current=None; return
         if isinstance(s,If):
             cond,typ=_expr(s.condition,env,current["operations"],counter,signatures)
             if typ.kind!=TypeKind.BOOL: raise OmniLoweringError("if condition must be boolean")
-            then_b=new("then"); else_b=new("else"); merge=new("merge")
-            current["operations"].append(Operation("branch",inputs=(cond,),attributes={"true":then_b["name"],"false":else_b["name"]})); current["successors"]=[then_b["name"],else_b["name"]]
+            then_b=new("then"); else_b=new("else"); merge=new("merge"); current["operations"].append(Operation("branch",inputs=(cond,),attributes={"true":then_b["name"],"false":else_b["name"]})); current["successors"]=[then_b["name"],else_b["name"]]
             current=then_b
-            for child in s.then_body: stmt(child)
+            for child in s.then_body:stmt(child)
             then_cont=current; current=else_b
-            for child in s.else_body: stmt(child)
+            for child in s.else_body:stmt(child)
             else_cont=current
-            if then_cont is not None: then_cont["successors"]=[merge["name"]]
-            if else_cont is not None: else_cont["successors"]=[merge["name"]]
-            if then_cont is None and else_cont is None: current=None
-            elif then_cont is None: current=else_cont
-            elif else_cont is None: current=then_cont
-            else: current=merge
-            return
+            if then_cont is not None:then_cont["successors"]=[merge["name"]]
+            if else_cont is not None:else_cont["successors"]=[merge["name"]]
+            current=None if then_cont is None and else_cont is None else else_cont if then_cont is None else then_cont if else_cont is None else merge; return
         if isinstance(s,While):
-            header=new("while_header"); body=new("while_body"); exit_b=new("while_exit")
-            current["successors"]=[header["name"]]; current["operations"].append(Operation("jump",attributes={"target":header["name"]}))
-            current=header; cond,typ=_expr(s.condition,env,current["operations"],counter,signatures)
+            header=new("while_header"); body=new("while_body"); exit_b=new("while_exit"); current["successors"]=[header["name"]]; current["operations"].append(Operation("jump",attributes={"target":header["name"]})); current=header
+            cond,typ=_expr(s.condition,env,current["operations"],counter,signatures)
             if typ.kind!=TypeKind.BOOL: raise OmniLoweringError("while condition must be boolean")
-            current["operations"].append(Operation("branch",inputs=(cond,),attributes={"true":body["name"],"false":exit_b["name"]})); current["successors"]=[body["name"],exit_b["name"]]
-            current=body
-            for child in s.body: stmt(child)
-            if current is not None:
-                current["successors"]=[header["name"]]; current["operations"].append(Operation("jump",attributes={"target":header["name"]}))
-            current=exit_b
-            return
+            current["operations"].append(Operation("branch",inputs=(cond,),attributes={"true":body["name"],"false":exit_b["name"]})); current["successors"]=[body["name"],exit_b["name"]]; current=body
+            for child in s.body:stmt(child)
+            if current is not None: current["successors"]=[header["name"]]; current["operations"].append(Operation("jump",attributes={"target":header["name"]}))
+            current=exit_b; return
         raise OmniLoweringError(f"unsupported statement: {type(s).__name__}")
-    for s in function.body: stmt(s)
-    if current is not None: raise OmniLoweringError(f"function has no return: {function.name}")
-    ir_blocks=tuple(BasicBlock(b["name"],tuple(b["operations"]),tuple(b["successors"])) for b in blocks if b["operations"] or b["successors"])
-    return FunctionIR(function.name,{name:_INT for name in function.parameters},result_type,ir_blocks)
-
+    for s in function.body:stmt(s)
+    if current is not None:raise OmniLoweringError(f"function has no return: {function.name}")
+    return FunctionIR(function.name,{name:_INT for name in function.parameters},result_type,tuple(BasicBlock(b["name"],tuple(b["operations"]),tuple(b["successors"])) for b in blocks if b["operations"] or b["successors"]))
 def lower_program(program:Program,*,module_name="omni_module"):
-    if not program.functions: raise OmniLoweringError("program contains no functions")
+    if not program.functions:raise OmniLoweringError("program contains no functions")
     signatures={fn.name:(len(fn.parameters),_INT) for fn in program.functions}
-    if len(signatures)!=len(program.functions): raise OmniLoweringError("duplicate function name")
-    module=ModuleIR(module_name,{},tuple(_function(fn,signatures) for fn in program.functions)); module.validate(); return module
-
+    if len(signatures)!=len(program.functions):raise OmniLoweringError("duplicate function name")
+    module=ModuleIR(module_name,{},tuple(_function(fn,signatures) for fn in program.functions));module.validate();return module
 def lower_source(source:str,*,module_name="omni_module"):
     from .omni_source import parse
     return lower_program(parse(source),module_name=module_name)
