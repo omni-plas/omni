@@ -32,15 +32,15 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--args", default="{}", help="JSON object containing entry arguments")
     validate = subparsers.add_parser("validate", help="validate a source program")
     validate.add_argument("source", type=Path)
-    validate.add_argument("--language", default="uir-json", choices=("uir-json", "omni"))
+    validate.add_argument("--language", default="uir-json", help="registered source language identifier")
     build = subparsers.add_parser("build", help="build native Omni source into a portable artifact")
     build.add_argument("source", type=Path)
     build.add_argument("-o", "--output", type=Path, required=True)
-    native_exec = subparsers.add_parser("native-exec", help="compile a UIR JSON program to a self-contained x86-64 ELF executable")
+    native_exec = subparsers.add_parser("native-exec", help="compile a UIR JSON program to a self-contained native executable")
     native_exec.add_argument("source", type=Path)
     native_exec.add_argument("-o", "--output", type=Path, required=True)
-    native_exec.add_argument("--target", default="linux", choices=("linux", "gnu-linux"))
-    native_exec.add_argument("--architecture", default="x86_64", choices=("x86_64", "amd64"))
+    native_exec.add_argument("--target", default="linux", help="target platform identifier")
+    native_exec.add_argument("--architecture", default="x86_64", help="target architecture identifier")
     emit = subparsers.add_parser("emit-c", help="emit a UIR program as C99 source")
     emit.add_argument("source", type=Path)
     emit.add_argument("output", type=Path)
@@ -127,7 +127,7 @@ def main(argv: list[str] | None = None) -> int:
             executable = compile_native_executable(result.ir, target)
             write_native_executable(args.output, executable)
             return 0
-        if args.command == "validate" and args.language == "omni":
+        if args.command == "validate" and args.language.lower() == "omni":
             return _validate_native(args.source)
         document = _load(args.source)
         if args.command in {"validate", "run"}:
