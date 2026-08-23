@@ -29,7 +29,7 @@ from .materialize import MaterializedArtifact, Materializer, validate_materializ
 from .materializer import MaterializationError, MaterializationPlan, create_materialization_plan
 from .native_backend import NativeArtifactBackend, read_artifact
 from .native_codegen import NativeCodegenError, NativeExecutable, emit_x86_64_elf
-from .native_executable import compile_native_executable
+from .native_executable import compile_native_executable, write_native_executable
 from .native_frontend import OmniNativeFrontend
 from .native_pipeline import compile_native
 from .omni_frontend import OmniFrontend
@@ -69,5 +69,5 @@ __all__ = [
     "compile_source", "compile_uir", "create_materialization_plan", "create_os_build_plan", "dumps_uir", "emit_c", "emit_with_backend", "emit_x86_64_elf", "entity_from_mapping",
     "evaluate_capabilities", "execute", "execute_module", "format_diagnostics", "is_valid", "loads_uir", "lower_to_ir", "manifest", "match", "read_artifact", "read_artifact_file",
     "materialize_to_directory", "optimize_module", "plan_compilation", "plan_construction", "plan_creation", "plan_installation", "report", "resolve_target", "tokenize",
-    "validate_artifact_for_target", "validate_materialized_artifact", "validate_function", "validate_module", "validate_uir", "write_artifact", "write_installer", "write_package", "write_release",
+    "validate_artifact_for_target", "validate_materialized_artifact", "validate_function", "validate_module", "validate_uir", "write_artifact", "write_installer", "write_native_executable", "write_package", "write_release",
 ]
