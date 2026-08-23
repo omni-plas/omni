@@ -11,6 +11,7 @@ from dataclasses import dataclass
 
 from .ir import ModuleIR
 from .targets import TargetDescriptor
+from .types import TypeKind
 
 _BASE = 0x400000
 _PAGE = 0x1000
@@ -40,6 +41,8 @@ def _mov_imm64(reg: int, value: int) -> bytes:
 
 
 def _mov_rr(dst: int, src: int) -> bytes:
+    if not 0 <= dst <= 15 or not 0 <= src <= 15:
+        raise NativeCodegenError("invalid register")
     return bytes([_rex(r=(src >> 3) & 1, b=(dst >> 3) & 1), 0x89, 0xC0 | ((src & 7) << 3) | (dst & 7)])
 
 
@@ -60,9 +63,10 @@ def _compile_ops(module: ModuleIR) -> bytes:
         raise NativeCodegenError("ELF bootstrap requires exactly one basic block")
 
     registers: dict[str, int] = {}
-    for (name, parameter_type), register in zip(function.parameters.items(), _SYSV_INTEGER_ARGUMENT_REGISTERS):
-        if parameter_type.kind.value != "integer":
+    for name, parameter_type in function.parameters.items():
+        if parameter_type.kind != TypeKind.INTEGER:
             raise NativeCodegenError(f"unsupported parameter type for {name}: {parameter_type}")
+    for (name, _), register in zip(function.parameters.items(), _SYSV_INTEGER_ARGUMENT_REGISTERS):
         registers[name] = register
 
     free = iter(_ALLOCATABLE_REGISTERS)
@@ -79,6 +83,8 @@ def _compile_ops(module: ModuleIR) -> bytes:
             value = op.attributes["value"]
             if not isinstance(value, int) or isinstance(value, bool):
                 raise NativeCodegenError("const currently requires an integer")
+            if op.outputs[0] in registers:
+                raise NativeCodegenError(f"value name already defined: {op.outputs[0]}")
             try:
                 reg = next(free)
             except StopIteration as exc:
@@ -90,6 +96,8 @@ def _compile_ops(module: ModuleIR) -> bytes:
         if op.opcode in {"add", "sub", "mul"}:
             if len(op.inputs) != 2 or len(op.outputs) != 1:
                 raise NativeCodegenError(f"{op.opcode} requires two inputs and one output")
+            if op.outputs[0] in registers:
+                raise NativeCodegenError(f"value name already defined: {op.outputs[0]}")
             try:
                 left = registers[op.inputs[0]]
                 right = registers[op.inputs[1]]
