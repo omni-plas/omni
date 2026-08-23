@@ -5,8 +5,9 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 
-from .backend import BackendRegistry, GenericArtifactBackend
+from .backend import BackendRegistry
 from .frontend import FrontendRegistry
+from .native_backend import NativeArtifactBackend
 from .native_frontend import OmniNativeFrontend
 from .source_pipeline import compile_source
 from .targets import TargetDescriptor
@@ -14,7 +15,7 @@ from .targets import TargetDescriptor
 
 @dataclass(frozen=True)
 class NativeArtifact:
-    """A reproducible semantic artifact produced from native Omni source."""
+    """A reproducible portable artifact produced from native Omni source."""
 
     target: TargetDescriptor
     payload: bytes
@@ -26,14 +27,16 @@ class NativeArtifact:
 
 
 def compile_native_artifact(source: str, *, filename: str = "<source>") -> NativeArtifact:
-    """Parse and validate native Omni source and return a reproducible artifact."""
+    """Parse, validate, and package native Omni source as an Omni artifact."""
     result = compile_source(
         source,
         language="omni",
         frontends=FrontendRegistry((OmniNativeFrontend(),)),
-        backends=BackendRegistry().register(GenericArtifactBackend()),
+        backends=BackendRegistry().register(NativeArtifactBackend()),
         filename=filename,
     )
+    if not result.ok or result.compilation is None:
+        raise ValueError("native Omni compilation failed")
     artifact = result.compilation.artifact
     target = result.compilation.plan.target
     payload = getattr(artifact, "payload", None)
