@@ -10,8 +10,11 @@ from pathlib import Path
 from .diagnostics import format_diagnostics
 from .emitters import EmitterError, emit_c
 from .errors import OmniError
+from .frontend import FrontendRegistry
 from .installer import InstallerKind, plan_installation
 from .lower import lower_to_ir
+from .native_frontend import OmniNativeFrontend
+from .omni_frontend import OmniFrontend
 from .pipeline import compile_semantics
 from .runtime import execute_module
 from .serialization import loads_uir
@@ -27,6 +30,7 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--args", default="{}", help="JSON object containing entry arguments")
     validate = subparsers.add_parser("validate", help="validate a UIR JSON program without executing it")
     validate.add_argument("source", type=Path)
+    validate.add_argument("--language", default="uir-json", choices=("uir-json", "omni"))
     emit = subparsers.add_parser("emit-c", help="emit a UIR program as C99 source")
     emit.add_argument("source", type=Path)
     emit.add_argument("output", type=Path)
@@ -87,12 +91,21 @@ def _installation_json(args: argparse.Namespace) -> str:
     )
 
 
+def _validate_native(path: Path) -> int:
+    source = path.read_text(encoding="utf-8")
+    uir = OmniNativeFrontend().parse(source, filename=str(path))
+    print(json.dumps(uir.to_dict(), ensure_ascii=False, sort_keys=True))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         if args.command == "install-plan":
             print(_installation_json(args), end="" if args.manifest else "\n")
             return 0
+        if args.command == "validate" and args.language == "omni":
+            return _validate_native(args.source)
         document = _load(args.source)
         if args.command in {"validate", "run"}:
             result = compile_semantics(document)
