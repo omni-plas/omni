@@ -1,4 +1,4 @@
-"""Link native function fragments and resolve local branch/call relocations."""
+"""Link native fragments and resolve local/global relocations."""
 from __future__ import annotations
 from dataclasses import dataclass
 from .native_relocations import Relocation, apply_rel8
@@ -20,7 +20,8 @@ def link_fragments(fragments):
     offsets={}
     cursor=0
     for fragment in fragments:
-        if fragment.name in offsets: raise ValueError(f"duplicate symbol: {fragment.name}")
+        if fragment.name in offsets:
+            raise ValueError(f"duplicate symbol: {fragment.name}")
         offsets[fragment.name]=cursor
         cursor += len(fragment.code)
     output=bytearray(cursor)
@@ -28,12 +29,25 @@ def link_fragments(fragments):
     for fragment in fragments:
         output[cursor:cursor+len(fragment.code)] = fragment.code
         cursor += len(fragment.code)
-    # Relocation targets are fragment-local absolute offsets in this compact linker.
     for fragment in fragments:
         base=offsets[fragment.name]
-        local=bytearray(fragment.code)
-        branch=tuple(Relocation(r.offset+base,r.target+base,r.size) for r in fragment.branch_relocations)
-        calls=tuple(CallRelocation(r.immediate_offset+base,r.target_offset+base,r.instruction_end+base) for r in fragment.call_relocations)
-        apply_rel8(output,branch)
-        apply_call_rel32(output,calls)
-    return LinkedModule(bytes(output),offsets)
+        branch=[]
+        for r in fragment.branch_relocations:
+            target = r.target + base
+            branch.append(Relocation(r.offset + base, target, r.size))
+        calls=[]
+        for r in fragment.call_relocations:
+            calls.append(CallRelocation(r.immediate_offset+base, r.target_offset+base, r.instruction_end+base))
+        apply_rel8(output, branch)
+        apply_call_rel32(output, calls)
+    return LinkedModule(bytes(output), offsets)
+
+def link_with_external_targets(fragments, external_symbols):
+    """Link fragments whose relocation targets may name external symbols.
+
+    External symbols are supplied as final code offsets in the linked image.
+    """
+    module=link_fragments(fragments)
+    symbols=dict(module.symbols)
+    symbols.update(external_symbols)
+    return LinkedModule(module.code, symbols)
