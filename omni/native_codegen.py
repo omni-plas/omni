@@ -14,6 +14,8 @@ from .targets import TargetDescriptor
 
 _BASE = 0x400000
 _PAGE = 0x1000
+_SYSV_INTEGER_ARGUMENT_REGISTERS = (7, 6, 2, 1, 8, 9)  # rdi,rsi,rdx,rcx,r8,r9
+_ALLOCATABLE_REGISTERS = (3, 4, 5, 10, 11, 12, 13, 14, 15)
 
 
 class NativeCodegenError(ValueError):
@@ -52,13 +54,18 @@ def _compile_ops(module: ModuleIR) -> bytes:
     if len(module.functions) != 1:
         raise NativeCodegenError("ELF bootstrap requires exactly one function")
     function = module.functions[0]
-    if function.parameters:
-        raise NativeCodegenError("ELF bootstrap requires a zero-argument function")
+    if len(function.parameters) > len(_SYSV_INTEGER_ARGUMENT_REGISTERS):
+        raise NativeCodegenError("ELF bootstrap supports at most six integer parameters")
     if len(function.blocks) != 1:
         raise NativeCodegenError("ELF bootstrap requires exactly one basic block")
 
     registers: dict[str, int] = {}
-    free = iter(range(1, 16))
+    for (name, parameter_type), register in zip(function.parameters.items(), _SYSV_INTEGER_ARGUMENT_REGISTERS):
+        if parameter_type.kind.value not in {"i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64", "int", "uint"}:
+            raise NativeCodegenError(f"unsupported parameter type for {name}: {parameter_type}")
+        registers[name] = register
+
+    free = iter(_ALLOCATABLE_REGISTERS)
     code = bytearray()
     returned = False
     return_reg: int | None = None
