@@ -21,6 +21,7 @@ from .frontend import Frontend, FrontendRegistry
 from .fs_materializer import FilesystemMaterializationError, MaterializedFile, materialize_to_directory
 from .installer import InstallationError, InstallationPlan, InstallerKind, plan_installation
 from .installer_builder import InstallerBuildError, InstallerBundle, build_installer, write_installer
+from .installer_verify import InstallerVerificationError, verify_installer
 from .ir import BasicBlock, FunctionIR, ModuleIR, Operation, Value
 from .language import OmniKeyword, OmniProgram
 from .lexer import Token, tokenize
@@ -60,7 +61,7 @@ __all__ = [
     "BuildPipelineError", "CapabilityError", "CapabilityGap", "CapabilityReport", "CapabilityRequirement", "CompilationError", "CompilationPlan",
     "CompilationResult", "ConstructionPlan", "CreationPlan", "CreationStep", "Diagnostic", "DigitalSpec", "EmitterError", "EntitySpec", "Frontend",
     "FrontendRegistry", "FilesystemMaterializationError", "FunctionIR", "GenericArtifactBackend", "InstallationError", "InstallationPlan", "InstallerBuildError",
-    "InstallerBundle", "InstallerKind", "LoweringError", "MaterializedArtifact", "MaterializedFile", "Materializer", "MaterializationError", "MaterializationPlan",
+    "InstallerBundle", "InstallerKind", "InstallerVerificationError", "LoweringError", "MaterializedArtifact", "MaterializedFile", "Materializer", "MaterializationError", "MaterializationPlan",
     "ModuleIR", "NativeArtifactBackend", "NativeCodegenError", "NativeExecutable", "OmniError", "OmniFrontend", "OmniKeyword", "OmniNativeFrontend", "OmniProgram", "Operation", "OSBuildPlan", "OSModelError", "OperatingSystemSpec",
     "PackageError", "PackageManifest", "PackageWriteError", "PluginRegistry", "ReleasePipelineError", "ReleaseResult", "RuntimeErrorBase", "SemanticModel",
     "SemanticValidationError", "SerializationError", "Severity", "SourceCompilationResult", "SourceNode", "SourcePipelineError", "SourceSpan", "SourceUnit",
@@ -68,6 +69,6 @@ __all__ = [
     "UIRValidationError", "ValidationError", "ValidationReport", "Value", "build_installer", "build_package", "build_release", "check_module", "compile_native", "compile_native_executable", "compile_semantics",
     "compile_source", "compile_uir", "create_materialization_plan", "create_os_build_plan", "dumps_uir", "emit_c", "emit_with_backend", "emit_x86_64_elf", "entity_from_mapping",
     "evaluate_capabilities", "execute", "execute_module", "format_diagnostics", "is_valid", "loads_uir", "lower_to_ir", "manifest", "match", "read_artifact", "read_artifact_file",
-    "materialize_to_directory", "optimize_module", "plan_compilation", "plan_construction", "plan_creation", "plan_installation", "report", "resolve_target", "tokenize",
-    "validate_artifact_for_target", "validate_materialized_artifact", "validate_function", "validate_module", "validate_uir", "write_artifact", "write_installer", "write_native_executable", "write_package", "write_release",
+    "materialize_to_directory", "optimize_module", "plan_compilation", "plan_construction", "plan_creation", "plan_installation", "report", "resolve_target", "tokenize", "validate_artifact_for_target",
+    "validate_materialized_artifact", "validate_function", "validate_module", "validate_uir", "verify_installer", "write_artifact", "write_installer", "write_native_executable", "write_package", "write_release",
 ]
