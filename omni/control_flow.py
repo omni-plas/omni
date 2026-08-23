@@ -1,9 +1,4 @@
-"""Control-flow analysis utilities for Omni IR.
-
-The analysis is target-neutral and deliberately independent of Python's compiler.
-It validates reachable blocks, predecessor relationships, and terminator shape,
-providing the foundation for native branch lowering and self-hosting.
-"""
+"""Control-flow analysis utilities for Omni IR."""
 
 from __future__ import annotations
 
@@ -41,10 +36,26 @@ def analyze_control_flow(function: FunctionIR) -> ControlFlowGraph:
         terminator = _terminator(block)
         if terminator in {"return", "ret"} and block.successors:
             raise ControlFlowError(f"return block has successors: {block.name}")
-        if terminator in {"branch", "cond_branch", "jump"} and not block.successors:
-            raise ControlFlowError(f"branch block has no successors: {block.name}")
+        if terminator in {"branch", "cond_branch", "jump"}:
+            if not block.successors:
+                raise ControlFlowError(f"branch block has no successors: {block.name}")
+            if terminator == "branch" and len(block.successors) != 2:
+                raise ControlFlowError(f"conditional branch requires two successors: {block.name}")
+            if terminator == "jump" and len(block.successors) != 1:
+                raise ControlFlowError(f"jump requires one successor: {block.name}")
         if terminator not in {None, "return", "ret", "branch", "cond_branch", "jump"} and block.successors:
             raise ControlFlowError(f"block {block.name} has successors without a control-flow terminator")
+        if terminator == "branch":
+            op = block.operations[-1]
+            if op.opcode == "branch":
+                true_target = op.attributes.get("true")
+                false_target = op.attributes.get("false")
+                if (true_target, false_target) != tuple(block.successors):
+                    raise ControlFlowError(f"branch targets disagree with successors: {block.name}")
+        if terminator == "jump":
+            target = block.operations[-1].attributes.get("target")
+            if target != block.successors[0]:
+                raise ControlFlowError(f"jump target disagrees with successor: {block.name}")
         for successor in block.successors:
             predecessors[successor].append(block.name)
 
