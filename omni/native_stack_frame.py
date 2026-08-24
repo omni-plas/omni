@@ -1,20 +1,26 @@
-"""Model x86-64 stack-frame layout for native calls."""
+"""Concrete x86-64 stack allocation and outgoing argument stores."""
 from __future__ import annotations
-from dataclasses import dataclass
+from .native_call_frame import plan_call_frame
 
-@dataclass(frozen=True)
-class StackFrame:
-    local_size:int
-    outgoing_size:int
-    saved_size:int
-    alignment:int=16
+RSP=4
+RBP=5
 
-    @property
-    def size(self)->int:
-        raw=self.local_size+self.outgoing_size+self.saved_size
-        return (raw+self.alignment-1)//self.alignment*self.alignment
+def sub_rsp(amount:int)->bytes:
+    if amount<0 or amount>127: raise ValueError('unsupported stack allocation')
+    return b'\x48\x83\xec'+bytes([amount])
 
-def make_frame(local_size=0,outgoing_size=0,saved_size=0,alignment=16):
-    if min(local_size,outgoing_size,saved_size)<0: raise ValueError('frame sizes must be non-negative')
-    if alignment<=0 or alignment&(alignment-1): raise ValueError('alignment must be a power of two')
-    return StackFrame(local_size,outgoing_size,saved_size,alignment)
+def add_rsp(amount:int)->bytes:
+    if amount<0 or amount>127: raise ValueError('unsupported stack cleanup')
+    return b'\x48\x83\xc4'+bytes([amount])
+
+def store_reg_rsp8(src:int, offset:int)->bytes:
+    if not 0<=src<=15 or not 0<=offset<=127 or offset%8: raise ValueError('invalid stack store')
+    rex=0x48 | ((src>>3)<<2)
+    return bytes([rex,0x89,0x44 | ((src&7)<<3),0x24,offset])
+
+def lower_outgoing_stack_args(stack_registers, current_alignment=0):
+    frame=plan_call_frame(len(stack_registers),current_alignment)
+    out=bytearray(sub_rsp(frame.cleanup_bytes))
+    for i,reg in enumerate(stack_registers):
+        out += store_reg_rsp8(reg,frame.alignment_padding+i*8)
+    return bytes(out),frame
