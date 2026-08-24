@@ -1,7 +1,5 @@
-from omni.native_call_sequence import build_call_sequence
+from omni.native_call_sequence import lower_internal_call
 
-
-def test_call_sequence_tracks_stack_arguments():
-    seq=build_call_sequence('callee',(3,4,5,6,7,8,9))
-    assert seq.target=='callee'
-    assert seq.stack_argument_count==1
+def test_internal_call_sequence_emits_call():
+    code=lower_internal_call(('a','b'), {'a':3,'b':4}, 0)
+    assert b'\xe8' in code
