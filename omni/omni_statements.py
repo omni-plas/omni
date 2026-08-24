@@ -5,10 +5,19 @@ from .omni_expr import Expr
 
 class Stmt: pass
 @dataclass(frozen=True)
-class Assign(Stmt): name:str; value:Expr
+class Assign(Stmt):
+    name: str
+    value: Expr
 @dataclass(frozen=True)
-class Return(Stmt): value:Expr|None=None
+class Return(Stmt):
+    value: Expr|None = None
 @dataclass(frozen=True)
-class Call(Stmt): function:str; arguments:tuple[Expr,...]=()
+class Call(Stmt):
+    function: str
+    arguments: tuple[Expr,...] = ()
+    result: str|None = None
 @dataclass(frozen=True)
-class If(Stmt): condition:Expr; then_body:tuple[Stmt,...]; else_body:tuple[Stmt,...]=()
+class If(Stmt):
+    condition: Expr
+    then_body: tuple[Stmt,...]
+    else_body: tuple[Stmt,...] = ()
