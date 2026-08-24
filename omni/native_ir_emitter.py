@@ -26,7 +26,12 @@ def lower_function(fn, locations: dict[str, int], stack_size: int = 0) -> Lowere
             elif op.opcode == 'call':
                 target=op.attributes.get('function')
                 if not target: raise ValueError('call requires function attribute')
+                if op.inputs: raise ValueError('call arguments require ABI call lowering')
                 out.append(('call',target))
+                if op.outputs:
+                    if len(op.outputs)!=1: raise ValueError('call supports one return value')
+                    dst=locations[op.outputs[0]]
+                    if dst != 0: out.append(('move',(dst,0)))
             elif op.opcode == 'return':
                 if len(op.inputs)!=1: raise ValueError('return requires one input')
                 src=locations[op.inputs[0]]
