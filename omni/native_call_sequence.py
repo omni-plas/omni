@@ -1,14 +1,10 @@
-"""Plan call sequences around native function frames."""
+"""Build a concrete internal-call byte sequence around ABI lowering."""
 from __future__ import annotations
-from dataclasses import dataclass
-from .native_call_lowering import lower_call, move_arguments
+from .native_call_lowering import move_call_arguments, emit_direct_call, move_return_value
 
-@dataclass(frozen=True)
-class CallSequence:
-    target: str
-    moves: bytes
-    stack_argument_count: int
-
-def build_call_sequence(target:str,args:tuple[int,...])->CallSequence:
-    plan=lower_call(target,args)
-    return CallSequence(target,move_arguments(plan),len(plan.stack_arguments))
+def lower_internal_call(values, register_map, rel32, result_register=None):
+    code=bytearray(move_call_arguments(values,register_map))
+    code += emit_direct_call(rel32)
+    if result_register is not None:
+        code += move_return_value(result_register)
+    return bytes(code)
