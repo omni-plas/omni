@@ -1,6 +1,7 @@
-"""Compute stable RBP-relative locations for native spill slots."""
+"""Compute stable RBP-relative locations and concrete native frame bytes."""
 from __future__ import annotations
 from dataclasses import dataclass
+from .native_frame_emitter import allocate_stack, cleanup_stack
 
 @dataclass(frozen=True)
 class FrameSlot:
@@ -19,3 +20,7 @@ def build_function_frame(spills: dict[str,int], stack_size: int) -> FunctionFram
     if slots and max(abs(s.rbp_offset) for s in slots) > stack_size:
         raise ValueError("spill slot exceeds frame")
     return FunctionFrame(stack_size, slots)
+
+def emit_frame(spills: dict[str,int], stack_size: int):
+    frame=build_function_frame(spills,stack_size)
+    return frame, allocate_stack(stack_size), cleanup_stack(stack_size)
