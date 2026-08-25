@@ -6,7 +6,7 @@ source of truth consumed by platform installers. It keeps the canonical
 colored logo and extension together and exposes platform-neutral registration
 metadata for Windows, macOS, freedesktop/Linux, and future platforms.
 
-Platform installers should convert the canonical JPEG into the native icon
+Platform installers convert the packaged canonical image into the native icon
 container required by the target OS (ICO, ICNS, SVG/PNG, or a future format)
 and register the resulting icon with the OS. The source logo is never
 re-colored or replaced.
@@ -20,9 +20,10 @@ import platform
 
 OI_EXTENSION = ".oi"
 OI_MIME_TYPE = "text/x-omni"
-OI_ICON_ASSET = PurePosixPath("assets/branding/omni-logo.jpg")
+OI_ICON_ASSET = PurePosixPath("omni/assets/branding/omni-logo.jpg")
+OI_REPOSITORY_ICON_ASSET = PurePosixPath("assets/branding/omni-logo.jpg")
 OI_ICON_COLOR_MODE = "color"
-OI_ICON_POLICY_VERSION = 1
+OI_ICON_POLICY_VERSION = 2
 
 
 @dataclass(frozen=True)
@@ -82,6 +83,7 @@ class OIFileIconPolicy:
             "extension": self.extension,
             "mime_type": self.mime_type,
             "icon_asset": self.icon_asset,
+            "repository_icon_asset": str(OI_REPOSITORY_ICON_ASSET),
             "color_mode": self.color_mode,
             "policy_version": self.policy_version,
             "apply_to": "every .oi file created or registered by Omni",
