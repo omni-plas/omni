@@ -35,11 +35,7 @@ class OIFileIconPolicy:
     policy_version: int = OI_ICON_POLICY_VERSION
 
     def platform_registration(self, system: str | None = None) -> dict[str, str]:
-        """Return native-registration identifiers for a target OS.
-
-        Unknown systems intentionally receive a generic registration contract;
-        Omni can add a native backend later without changing the .oi identity.
-        """
+        """Return native-registration identifiers for a target OS."""
         name = (system or platform.system()).lower()
         if name == "windows":
             return {
