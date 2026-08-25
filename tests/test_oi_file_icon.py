@@ -1,4 +1,9 @@
-from omni.oi_file_icon import OI_ICON_ASSET, OI_ICON_COLOR_MODE, oi_file_icon_policy
+from omni.oi_file_icon import (
+    OI_ICON_ASSET,
+    OI_ICON_COLOR_MODE,
+    OI_REPOSITORY_ICON_ASSET,
+    oi_file_icon_policy,
+)
 
 
 def test_every_oi_file_uses_the_canonical_colored_logo():
@@ -8,8 +13,10 @@ def test_every_oi_file_uses_the_canonical_colored_logo():
     assert policy.extension == ".oi"
     assert manifest["extension"] == ".oi"
     assert manifest["icon_asset"] == str(OI_ICON_ASSET)
+    assert manifest["repository_icon_asset"] == str(OI_REPOSITORY_ICON_ASSET)
     assert manifest["color_mode"] == OI_ICON_COLOR_MODE == "color"
     assert manifest["apply_to"] == "every .oi file created or registered by Omni"
+    assert manifest["native_conversion_required"] is True
 
 
 def test_native_formats_are_selected_per_platform_without_changing_the_logo():
