@@ -4,6 +4,15 @@ Omni is an independent, open-world digital creation, transformation, compilation
 
 The repository implements the architecture defined by [`SPEC.md`](./SPEC.md): formal UIR, semantic analysis, lowering to executable IR, extensible source/target contracts, deterministic artifacts, a reference runtime, installation planning, and concrete materializers for supported subsets.
 
+## Official identity
+
+Omni's official visual identity is the three-dimensional **winged lightning-and-infinity emblem**. The lightning represents power, speed, execution, and transformation; the infinity symbol represents Omni's open-world and extensible nature; and the wings represent freedom and reach across languages, targets, environments, and eras.
+
+The official Omni source-file extension is **`.oi`**. A `.oi` file is source code written in Omni, analogous to `.py` for Python. Omni editors, IDEs, file managers, installers, and operating-system integrations should associate `.oi` files with the Omni emblem.
+
+Canonical branding documentation: [`docs/OMNI_BRAND_IDENTITY.md`](./docs/OMNI_BRAND_IDENTITY.md)
+Canonical logo asset: [`assets/branding/omni-logo.jpg`](./assets/branding/omni-logo.jpg)
+
 ## Core model
 
 ```text
