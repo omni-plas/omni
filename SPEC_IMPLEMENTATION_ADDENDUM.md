@@ -133,3 +133,21 @@ A self-hosting milestone is only complete when Omni can compile the relevant Omn
 This document distinguishes architecture from capability maturity. A subsystem may be represented and tested before it supports the complete universal behavior promised by the top-level specification. Implementations must not silently treat a partial backend, limited target set, or bootstrap mechanism as proof that universal compilation or universal target support is already complete.
 
 The engineering objective remains to expand the typed, modular pipeline until additional languages, targets, operations, entities, and future definitions can be introduced without redesigning the entire system.
+
+## 10. Official Omni Brand and Source-File Identity
+
+The official visual identity of Omni is the selected three-dimensional **winged lightning-and-infinity emblem**.
+
+The mark is composed of:
+
+- a central lightning bolt representing power, speed, execution, and transformation;
+- an integrated infinity symbol representing Omni's open-world, extensible, and non-closed nature;
+- symmetrical wings representing freedom, reach, extensibility, and operation across languages, targets, environments, and eras.
+
+The official mark is Omni-native and must not contain unrelated religious, third-party, or external-language symbols as part of the core identity.
+
+The official source-file extension of the Omni programming language is **`.oi`**. A file ending in `.oi` is an Omni source file, in the same identity relationship that `.py` has with Python. Omni tooling, editors, IDEs, file managers, installers, and operating-system integrations should associate `.oi` files with the Omni emblem.
+
+For large branding surfaces the wordmark may accompany the emblem. For `.oi` file icons, favicons, application icons, and other compact surfaces, the emblem-only mark is the preferred representation.
+
+The canonical repository asset is `assets/branding/omni-logo.jpg`. Platform-specific icon formats may be generated from this canonical asset without changing Omni's underlying identity.
