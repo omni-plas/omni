@@ -24,3 +24,6 @@ addopts = "-ra"
 
 [tool.setuptools.packages.find]
 include = ["omni*"]
+
+[tool.setuptools.package-data]
+omni = ["assets/branding/*.jpg"]
