@@ -1,15 +1,16 @@
 """Consent-based local screen sharing over WebRTC.
 
-Run:
+Run by double-clicking a.py or with:
     python a.py
 
-On the host device, open http://127.0.0.1:8000, press Start sharing,
-and approve the browser's screen-capture dialog. Give the generated room
-code to a viewer on the same network. The viewer opens the server address
-with ?room=ROOM and sees the host screen after the host accepts the viewer.
+The program starts the local server and opens the browser automatically.
+The page first shows Cancel and Start. Start asks the browser for explicit
+screen-capture permission. For continuous sharing across navigation, choose
+"Entire Screen" in the browser's native sharing dialog. Once the whole screen
+is selected, changing apps, windows, or browser pages does not stop sharing.
 
-No screen is captured until the host explicitly grants browser permission.
-This is a small self-contained prototype using only Python's standard library.
+The browser itself controls the final capture choice; Python/JavaScript cannot
+silently select a screen or bypass the browser permission dialog.
 """
 
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -18,6 +19,7 @@ import json
 import secrets
 import threading
 import time
+import webbrowser
 
 HOST = "0.0.0.0"
 PORT = 8000
@@ -32,15 +34,19 @@ HTML = r'''<!doctype html>
 <title>Omni Screen Share</title>
 <style>
 body{font-family:system-ui,sans-serif;max-width:1000px;margin:32px auto;padding:0 18px;background:#111;color:#eee}
-button,input{font:inherit;padding:11px 14px;border-radius:9px;border:1px solid #555}button{cursor:pointer;font-weight:700}
+button,input{font:inherit;padding:12px 18px;border-radius:9px;border:1px solid #555}button{cursor:pointer;font-weight:700}
+.actions{display:flex;gap:12px;margin:22px 0}.cancel{background:#222;color:#eee}.start{background:#eee;color:#111}
 video{display:block;width:100%;max-height:75vh;background:#000;border-radius:14px;margin-top:18px}
 #code{font-size:1.3rem;font-weight:700;letter-spacing:.15em}.muted{color:#aaa}.hidden{display:none}
 </style></head>
 <body>
 <h1>Omni Screen Share</h1>
 <div id="host">
-  <p>Host mode: create a room, then explicitly choose the screen/window to share.</p>
-  <button id="start">Start sharing</button>
+  <p id="intro">Ready to share this device screen.</p>
+  <div class="actions">
+    <button id="cancel" class="cancel">Cancel</button>
+    <button id="start" class="start">Start</button>
+  </div>
   <p id="roomLine" class="hidden">Room code: <span id="code"></span></p>
   <p id="hostStatus" class="muted">Not sharing.</p>
   <video id="hostPreview" autoplay muted playsinline></video>
@@ -79,15 +85,36 @@ async function send(type,data){await api('/signal',{room:state.room,client:state
 
 if(!isViewer){
   const status=document.querySelector('#hostStatus');
-  document.querySelector('#start').onclick=async()=>{
-    const button=document.querySelector('#start'); button.disabled=true;
+  const start=document.querySelector('#start');
+  const cancel=document.querySelector('#cancel');
+
+  cancel.onclick=()=>{
+    state.closed=true;
+    status.textContent='Sharing cancelled.';
+    start.disabled=true;
+    cancel.disabled=true;
+  };
+
+  start.onclick=async()=>{
+    start.disabled=true;
+    cancel.disabled=true;
+    status.textContent='Opening the browser sharing permission…';
     try{
-      state.stream=await navigator.mediaDevices.getDisplayMedia({video:{cursor:'always'},audio:false});
+      // Asking for a display capture keeps the capture alive when the user
+      // navigates to another page, provided the user selects Entire Screen.
+      state.stream=await navigator.mediaDevices.getDisplayMedia({
+        video:{cursor:'always'},
+        audio:false,
+        preferCurrentTab:false,
+        selfBrowserSurface:'exclude',
+        surfaceSwitching:'include'
+      });
       document.querySelector('#hostPreview').srcObject=state.stream;
       const created=await api('/room',{action:'create'}); state.room=created.room; state.client=created.client;
       document.querySelector('#code').textContent=state.room;
       document.querySelector('#roomLine').classList.remove('hidden');
-      status.textContent='Sharing is active. Waiting for a viewer…';
+      document.querySelector('#intro').textContent='This device screen is ready to share.';
+      status.textContent='Sharing is active. You can switch to another page or app; the selected screen remains shared.';
       state.pc=new RTCPeerConnection(iceServers);
       state.stream.getTracks().forEach(t=>state.pc.addTrack(t,state.stream));
       state.pc.onicecandidate=e=>{if(e.candidate) send('candidate',e.candidate).catch(()=>{});};
@@ -96,11 +123,16 @@ if(!isViewer){
         if(m.type==='viewer-ready'){
           const offer=await state.pc.createOffer(); await state.pc.setLocalDescription(offer);
           await send('offer',state.pc.localDescription);
-          status.textContent='Viewer connected. Screen is being sent.';
+          status.textContent='Viewer connected. Your selected screen is being sent live.';
         }else if(m.type==='answer') await state.pc.setRemoteDescription(m.data);
         else if(m.type==='candidate') try{await state.pc.addIceCandidate(m.data);}catch(e){}
       });
-    }catch(e){button.disabled=false;status.textContent='Screen sharing was cancelled or is unavailable. '+e.message;}
+    }catch(e){
+      state.closed=false;
+      start.disabled=false;
+      cancel.disabled=false;
+      status.textContent='Screen sharing was cancelled or is unavailable. '+e.message;
+    }
   };
 }else{
   const status=document.querySelector('#viewerStatus');
@@ -130,8 +162,10 @@ if(!isViewer){
 def new_client():
     return secrets.token_urlsafe(9)
 
+
 def new_room():
     return secrets.token_hex(3).upper()
+
 
 def create_room():
     with LOCK:
@@ -140,12 +174,14 @@ def create_room():
         client=new_client(); ROOMS[room]={'clients':{client:[]},'created':time.time()}
         return room,client
 
+
 def join_room(room):
     with LOCK:
         if room not in ROOMS: raise KeyError('Room not found')
         if len(ROOMS[room]['clients']) >= 2: raise RuntimeError('Room is full')
         client=new_client(); ROOMS[room]['clients'][client]=[]
         return client
+
 
 def post_message(room,client,kind,data):
     with LOCK:
@@ -154,6 +190,7 @@ def post_message(room,client,kind,data):
         for other,queue in ROOMS[room]['clients'].items():
             if other != client: queue.append({'type':kind,'data':data})
 
+
 def get_messages(room,client):
     with LOCK:
         if room not in ROOMS or client not in ROOMS[room]['clients']:
@@ -161,13 +198,16 @@ def get_messages(room,client):
         q=ROOMS[room]['clients'][client]; ROOMS[room]['clients'][client]=[]
         return q
 
+
 class Handler(BaseHTTPRequestHandler):
     def send_json(self,obj,status=200):
         body=json.dumps(obj,separators=(',',':')).encode()
         self.send_response(status); self.send_header('Content-Type','application/json')
         self.send_header('Content-Length',str(len(body))); self.send_header('Cache-Control','no-store'); self.end_headers(); self.wfile.write(body)
+
     def read_json(self):
         n=int(self.headers.get('Content-Length','0')); return json.loads(self.rfile.read(n) or b'{}')
+
     def do_GET(self):
         parsed=urlparse(self.path)
         if parsed.path=='/poll':
@@ -177,6 +217,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         if parsed.path!='/': self.send_error(404); return
         body=HTML.encode(); self.send_response(200); self.send_header('Content-Type','text/html; charset=utf-8'); self.send_header('Content-Length',str(len(body))); self.end_headers(); self.wfile.write(body)
+
     def do_POST(self):
         if self.path not in ('/room','/signal'): self.send_error(404); return
         try:
@@ -190,11 +231,17 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json({'ok':True})
         except KeyError as e:self.send_json({'error':str(e)},404)
         except Exception as e:self.send_json({'error':str(e)},400)
+
     def log_message(self,fmt,*args): print(f'{self.address_string()} - {fmt % args}')
+
 
 if __name__=='__main__':
     server=ThreadingHTTPServer((HOST,PORT),Handler)
     print(f'Omni Screen Share: http://127.0.0.1:{PORT}')
+    try:
+        webbrowser.open(f'http://127.0.0.1:{PORT}', new=2)
+    except Exception as exc:
+        print(f'Could not open browser automatically: {exc}')
     print('The viewer must use the host device IP and the room code.')
     try: server.serve_forever()
     except KeyboardInterrupt: pass
