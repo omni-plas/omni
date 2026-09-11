@@ -17,9 +17,11 @@ from .lower import lower_to_ir
 from .native_artifact import compile_native_artifact
 from .native_executable import compile_native_executable, write_native_executable
 from .native_frontend import OmniNativeFrontend
+from .oi_registration import render_registration_manifest
 from .pipeline import compile_semantics
 from .runtime import execute_module
 from .serialization import loads_uir
+from .source_files import is_omni_source_path
 from .targets import TargetDescriptor
 
 
@@ -32,7 +34,7 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--args", default="{}", help="JSON object containing entry arguments")
     validate = subparsers.add_parser("validate", help="validate a source program")
     validate.add_argument("source", type=Path)
-    validate.add_argument("--language", default="uir-json", help="registered source language identifier")
+    validate.add_argument("--language", default=None, help="source language; inferred as Omni for .oi files")
     build = subparsers.add_parser("build", help="build native Omni source into a portable artifact")
     build.add_argument("source", type=Path)
     build.add_argument("-o", "--output", type=Path, required=True)
@@ -44,6 +46,8 @@ def build_parser() -> argparse.ArgumentParser:
     emit = subparsers.add_parser("emit-c", help="emit a UIR program as C99 source")
     emit.add_argument("source", type=Path)
     emit.add_argument("output", type=Path)
+    oi_icon = subparsers.add_parser("oi-icon-manifest", help="print the cross-platform .oi colored-logo registration manifest")
+    oi_icon.add_argument("-o", "--output", type=Path, default=None)
     install = subparsers.add_parser("install-plan", help="create a target-neutral installation plan")
     install.add_argument("--target", required=True, help="target platform identifier")
     install.add_argument("--architecture", default=None)
@@ -98,6 +102,14 @@ def _validate_native(path: Path) -> int:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
+        if args.command == "oi-icon-manifest":
+            rendered = render_registration_manifest()
+            if args.output is None:
+                print(rendered, end="")
+            else:
+                args.output.parent.mkdir(parents=True, exist_ok=True)
+                args.output.write_text(rendered, encoding="utf-8")
+            return 0
         if args.command == "install-plan":
             print(_installation_json(args), end="" if args.manifest else "\n")
             return 0
@@ -127,8 +139,10 @@ def main(argv: list[str] | None = None) -> int:
             executable = compile_native_executable(result.ir, target)
             write_native_executable(args.output, executable)
             return 0
-        if args.command == "validate" and args.language.lower() == "omni":
-            return _validate_native(args.source)
+        if args.command == "validate":
+            language = (args.language or ("omni" if is_omni_source_path(args.source) else "uir-json")).lower()
+            if language == "omni":
+                return _validate_native(args.source)
         document = _load(args.source)
         if args.command in {"validate", "run"}:
             result = compile_semantics(document)
