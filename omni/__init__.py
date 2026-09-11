@@ -15,7 +15,7 @@ from .native_spill import NativeSpillError, SpillAction, SpillPlan, plan_spills,
 from .native_backend import NativeArtifactBackend, read_artifact
 from .native_codegen import NativeCodegenError, NativeExecutable, emit_x86_64_elf
 from .native_multi_codegen import emit_multi_x86_64_elf
-from .oi_file_icon import OI_EXTENSION, OI_ICON_ASSET, OI_ICON_COLOR_MODE, OI_MIME_TYPE, OIFileIconPolicy, oi_file_icon_policy
+from .oi_file_icon import OI_EXTENSION, OI_ICON_ASSET, OI_ICON_COLOR_MODE, OI_MIME_TYPE, OIFileIconPolicy, native_registration_for_current_os, oi_file_icon_policy
 from .oi_registration import OIRegistration, registration_for, render_registration_manifest
 from .omni_source import Binary, Call, Function, Let, Literal, Name, OmniSyntaxError, Parser, Program, Return, Token, TokenKind, parse as parse_omni_source, tokenize as tokenize_omni_source
 from .omni_lowering import OmniLoweringError, lower_program, lower_source
