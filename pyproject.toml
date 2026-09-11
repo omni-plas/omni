@@ -11,6 +11,9 @@ dependencies = []
 readme = "README.md"
 license = {text = "MIT"}
 
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
 [project.urls]
 Repository = "https://github.com/gtfttg84-blip/omni"
 
