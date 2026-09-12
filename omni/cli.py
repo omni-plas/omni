@@ -23,6 +23,7 @@ from .pipeline import compile_semantics
 from .runtime import execute_module
 from .serialization import loads_uir
 from .source_files import is_omni_source_path
+from .target_pack import TargetPackError, dump_target_pack, load_target_pack
 from .targets import TargetDescriptor
 
 
@@ -52,6 +53,9 @@ def build_parser() -> argparse.ArgumentParser:
     language_pack = subparsers.add_parser("language-pack", help="validate or canonicalize a declarative language definition")
     language_pack.add_argument("source", type=Path)
     language_pack.add_argument("-o", "--output", type=Path, default=None)
+    target_pack = subparsers.add_parser("target-pack", help="validate or canonicalize a declarative target definition")
+    target_pack.add_argument("source", type=Path)
+    target_pack.add_argument("-o", "--output", type=Path, default=None)
     install = subparsers.add_parser("install-plan", help="create a target-neutral installation plan")
     install.add_argument("--target", required=True, help="target platform identifier")
     install.add_argument("--architecture", default=None)
@@ -121,6 +125,13 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 dump_language_pack(definition, args.output)
             return 0
+        if args.command == "target-pack":
+            target = load_target_pack(args.source)
+            if args.output is None:
+                print(json.dumps(target.document(), ensure_ascii=False, sort_keys=True, indent=2))
+            else:
+                dump_target_pack(target, args.output)
+            return 0
         if args.command == "install-plan":
             print(_installation_json(args), end="" if args.manifest else "\n")
             return 0
@@ -172,7 +183,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "emit-c":
             args.output.write_bytes(emit_c(lower_to_ir(document), TargetDescriptor("portable-c")))
             return 0
-    except (OSError, ValueError, KeyError, EmitterError, OmniError, LanguagePackError, json.JSONDecodeError) as exc:
+    except (OSError, ValueError, KeyError, EmitterError, OmniError, LanguagePackError, TargetPackError, json.JSONDecodeError) as exc:
         print(f"omni: error: {exc}", file=sys.stderr)
         return 2
     return 2
