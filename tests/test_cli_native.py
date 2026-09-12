@@ -25,3 +25,15 @@ def test_cli_validates_and_builds_canonical_oi_source(tmp_path: Path, capsys):
     document = read_artifact(output.read_bytes())
     assert document["source"]["extension"] == ".oi"
     assert document["semantics"]["program"]["entry"] == "main"
+
+
+def test_cli_canonicalizes_language_pack(tmp_path: Path, capsys):
+    source = tmp_path / "future.json"
+    source.write_text(
+        '{"name":"FutureLang","version":"1","aliases":["future"],"source_extensions":[".fl"]}',
+        encoding="utf-8",
+    )
+    assert main(["language-pack", str(source)]) == 0
+    output = capsys.readouterr().out
+    assert '"identity": "FutureLang@1"' in output
+    assert '"source_extensions": [' in output
