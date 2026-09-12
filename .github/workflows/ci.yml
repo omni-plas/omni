@@ -25,6 +25,7 @@ jobs:
       - run: omni validate examples/hello.oi
       - run: omni build examples/hello.oi --output /tmp/hello.omni-artifact
       - run: omni language-pack examples/languages/futurelang.json
+      - run: omni target-pack examples/targets/future-os.json
 
   package:
     runs-on: ubuntu-latest
@@ -41,3 +42,4 @@ jobs:
       - run: omni --help
       - run: omni validate examples/hello.oi
       - run: omni language-pack examples/languages/futurelang.json
+      - run: omni target-pack examples/targets/future-os.json
