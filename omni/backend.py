@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Mapping, Protocol
 
 from .artifacts import Artifact
 from .compiler import CompilationPlan
@@ -15,14 +14,16 @@ class BackendError(ValueError):
     """Raised when a backend cannot satisfy a compilation request."""
 
 
-class TargetBackend(Protocol):
-    """Protocol implemented by target code generators."""
+class TargetBackend:
+    """Protocol-like base contract implemented by target code generators."""
 
     name: str
 
-    def supports(self, target: TargetDescriptor) -> bool: ...
+    def supports(self, target: TargetDescriptor) -> bool:
+        raise NotImplementedError
 
-    def compile(self, uir: UIR, plan: CompilationPlan) -> Artifact: ...
+    def compile(self, uir: UIR, plan: CompilationPlan) -> Artifact:
+        raise NotImplementedError
 
 
 @dataclass(frozen=True)
@@ -61,7 +62,7 @@ class BackendRegistry:
 
 
 class GenericArtifactBackend:
-    """Backend that materializes a validated UIR as a semantic artifact."""
+    """Backend that materializes validated UIR as a deterministic semantic artifact."""
 
     name = "generic-semantic-artifact"
 
@@ -73,4 +74,4 @@ class GenericArtifactBackend:
             raise BackendError(f"backend does not support {plan.target.identity()}")
         import json
         payload = (json.dumps(uir.to_dict(), ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
-        return Artifact("semantic-entity", uir.entity_kind, plan.target, "json", payload=payload)
+        return Artifact(plan.target, payload, "json")
