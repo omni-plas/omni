@@ -24,6 +24,7 @@ jobs:
       - run: omni --help
       - run: omni validate examples/hello.oi
       - run: omni build examples/hello.oi --output /tmp/hello.omni-artifact
+      - run: omni language-pack examples/languages/futurelang.json
 
   package:
     runs-on: ubuntu-latest
@@ -39,3 +40,4 @@ jobs:
       - run: python -m pip install dist/*.whl
       - run: omni --help
       - run: omni validate examples/hello.oi
+      - run: omni language-pack examples/languages/futurelang.json
