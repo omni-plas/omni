@@ -1,0 +1,27 @@
+{
+  "name": "FutureLang",
+  "version": "1.0",
+  "aliases": ["future"],
+  "source_extensions": [".fl"],
+  "syntax": {
+    "grammar": "declared-by-language-pack"
+  },
+  "semantics": {
+    "evaluation": "defined-by-language-specification"
+  },
+  "type_rules": {
+    "typing": "defined-by-language-specification"
+  },
+  "execution_model": {
+    "model": "target-defined"
+  },
+  "memory_model": {
+    "model": "target-defined"
+  },
+  "abi_expectations": {
+    "calling_convention": "target-defined"
+  },
+  "dependency_rules": {
+    "resolution": "omni"
+  }
+}
