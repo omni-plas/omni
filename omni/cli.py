@@ -18,6 +18,7 @@ from .native_artifact import compile_native_artifact
 from .native_executable import compile_native_executable, write_native_executable
 from .native_frontend import OmniNativeFrontend
 from .oi_registration import render_registration_manifest
+from .language_pack import LanguagePackError, dump_language_pack, load_language_pack
 from .pipeline import compile_semantics
 from .runtime import execute_module
 from .serialization import loads_uir
@@ -48,6 +49,9 @@ def build_parser() -> argparse.ArgumentParser:
     emit.add_argument("output", type=Path)
     oi_icon = subparsers.add_parser("oi-icon-manifest", help="print the cross-platform .oi colored-logo registration manifest")
     oi_icon.add_argument("-o", "--output", type=Path, default=None)
+    language_pack = subparsers.add_parser("language-pack", help="validate or canonicalize a declarative language definition")
+    language_pack.add_argument("source", type=Path)
+    language_pack.add_argument("-o", "--output", type=Path, default=None)
     install = subparsers.add_parser("install-plan", help="create a target-neutral installation plan")
     install.add_argument("--target", required=True, help="target platform identifier")
     install.add_argument("--architecture", default=None)
@@ -110,6 +114,13 @@ def main(argv: list[str] | None = None) -> int:
                 args.output.parent.mkdir(parents=True, exist_ok=True)
                 args.output.write_text(rendered, encoding="utf-8")
             return 0
+        if args.command == "language-pack":
+            definition = load_language_pack(args.source)
+            if args.output is None:
+                print(json.dumps(definition.manifest(), ensure_ascii=False, sort_keys=True, indent=2))
+            else:
+                dump_language_pack(definition, args.output)
+            return 0
         if args.command == "install-plan":
             print(_installation_json(args), end="" if args.manifest else "\n")
             return 0
@@ -161,7 +172,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "emit-c":
             args.output.write_bytes(emit_c(lower_to_ir(document), TargetDescriptor("portable-c")))
             return 0
-    except (OSError, ValueError, KeyError, EmitterError, OmniError, json.JSONDecodeError) as exc:
+    except (OSError, ValueError, KeyError, EmitterError, OmniError, LanguagePackError, json.JSONDecodeError) as exc:
         print(f"omni: error: {exc}", file=sys.stderr)
         return 2
     return 2
