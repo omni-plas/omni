@@ -37,3 +37,15 @@ def test_cli_canonicalizes_language_pack(tmp_path: Path, capsys):
     output = capsys.readouterr().out
     assert '"identity": "FutureLang@1"' in output
     assert '"source_extensions": [' in output
+
+
+def test_cli_canonicalizes_target_pack(tmp_path: Path, capsys):
+    source = tmp_path / "future-target.json"
+    source.write_text(
+        '{"schema":"omni.target.v1","platform":"FutureOS","architecture":"future-cpu","abi":"future-abi","capabilities":{"gui":true}}',
+        encoding="utf-8",
+    )
+    assert main(["target-pack", str(source)]) == 0
+    output = capsys.readouterr().out
+    assert '"platform": "FutureOS"' in output
+    assert '"architecture": "future-cpu"' in output
