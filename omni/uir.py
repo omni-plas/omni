@@ -5,8 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Mapping
 
-from .uir_schema import validate_source_descriptor, validate_target_descriptor
-
 
 class UIRValidationError(ValueError):
     """Raised when a UIR document violates the Omni contract."""
@@ -70,6 +68,10 @@ def _validate_entity(entity: Mapping[str, Any]) -> None:
 
 
 def validate_uir(document: Mapping[str, Any]) -> UIR:
+    # Imported lazily to avoid the schema module importing UIRValidationError
+    # from this module while this module itself is still initializing.
+    from .uir_schema import validate_source_descriptor, validate_target_descriptor
+
     root = _require_mapping(document, "UIR")
     version = _require_nonempty_string(root.get("version"), "version")
     entity = _require_mapping(root.get("entity"), "entity")
