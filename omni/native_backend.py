@@ -6,7 +6,7 @@ import hashlib
 import json
 import struct
 
-from .artifacts import Artifact
+from .backends import Artifact
 from .backend import BackendError
 from .compiler import CompilationPlan
 from .targets import TargetDescriptor
@@ -31,7 +31,7 @@ class NativeArtifactBackend:
         digest = hashlib.sha256(document).digest()
         header = _MAGIC + struct.pack(">I", len(document)) + digest
         payload = header + document
-        return Artifact("portable-entity", uir.entity_kind, plan.target, "omni-artifact", payload=payload)
+        return Artifact(plan.target, payload, "omni-artifact")
 
 
 def prepare_native_function_for_backend(function, registers=(3, 4, 5, 10, 11, 12, 13, 14, 15)) -> PreparedNativeFunction:
