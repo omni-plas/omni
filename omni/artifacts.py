@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 
+from .backends import Artifact
 from .targets import TargetDescriptor
 
 
