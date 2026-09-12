@@ -1,0 +1,12 @@
+{
+  "schema": "omni.target.v1",
+  "platform": "FutureOS",
+  "architecture": "future-cpu",
+  "abi": "future-abi",
+  "capabilities": {
+    "native-executable": true,
+    "gui": true,
+    "network": true,
+    "package-manager": true
+  }
+}
