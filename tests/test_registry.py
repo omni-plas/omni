@@ -7,9 +7,16 @@ from omni.registry import CompilerRegistry, RegistryError
 class DummyFrontend:
     language = "x"
 
+    def lower(self, source):
+        return source
+
 
 class DummyBackend:
-    pass
+    def supports_target(self, target):
+        return True
+
+    def emit(self, program, target):
+        return None
 
 
 def test_registry_supports_runtime_extensions():
@@ -42,6 +49,16 @@ def test_registry_resolves_versioned_language_definitions_by_alias():
     assert registry.language_definition("FutureLang") is definition
     assert registry.language_definition("future", "1.0") is definition
     assert registry.language_definition("future").identity == "FutureLang@1.0"
+    assert registry.language_definition_for_extension(".fl") is definition
+
+
+def test_registry_resolves_frontend_from_extension():
+    registry = CompilerRegistry()
+    definition = LanguageDefinition(name="FutureLang", version="1", source_extensions=("fl",))
+    frontend = DummyFrontend()
+    registry.register_language_definition(definition)
+    registry.register_frontend("FutureLang", frontend)
+    assert registry.frontend_for_extension("fl") is frontend
 
 
 def test_registry_rejects_duplicate_language_identity():
@@ -50,3 +67,11 @@ def test_registry_rejects_duplicate_language_identity():
     registry.register_language_definition(definition)
     with pytest.raises(RegistryError, match="already registered"):
         registry.register_language_definition(definition)
+
+
+def test_registry_rejects_unusable_frontend_and_backend():
+    registry = CompilerRegistry()
+    with pytest.raises(RegistryError, match="lower"):
+        registry.register_frontend("broken", object())
+    with pytest.raises(RegistryError, match="supports_target"):
+        registry.register_backend("broken", object())
