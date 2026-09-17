@@ -10,6 +10,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from .frontends import SourceUnit
 from .omni_lowering import lower_source
 from .uir import UIR, validate_uir
 
@@ -20,6 +21,14 @@ class OmniNativeFrontend:
 
     def supports(self, language: str) -> bool:
         return isinstance(language, str) and language.strip().lower() == self.language
+
+    def lower(self, source: SourceUnit) -> UIR:
+        """Lower a registry SourceUnit into validated semantic UIR."""
+        if not isinstance(source, SourceUnit):
+            raise TypeError("source must be a SourceUnit")
+        if not self.supports(source.language):
+            raise ValueError(f"frontend {self.language} cannot lower language {source.language!r}")
+        return self.parse(source.text, filename=source.origin or "<source>")
 
     @staticmethod
     def _operation_document(operation) -> dict[str, Any]:
