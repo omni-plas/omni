@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from threading import RLock
-from typing import Any
 
 from .backends import Backend
 from .frontends import Frontend
@@ -12,7 +11,7 @@ from .language_definition import LanguageDefinition
 
 
 class RegistryError(ValueError):
-    pass
+    """Raised when an extension cannot be registered or resolved deterministically."""
 
 
 @dataclass
@@ -41,11 +40,7 @@ class CompilerRegistry:
     def language_definition(self, language: str, version: str | None = None) -> LanguageDefinition:
         """Resolve a language by canonical name/alias and optional version."""
         with self._lock:
-            matches = [
-                definition
-                for definition in self._languages.values()
-                if definition.matches(language, version)
-            ]
+            matches = [definition for definition in self._languages.values() if definition.matches(language, version)]
         if not matches:
             requested = language if version is None else f"{language}@{version}"
             raise RegistryError(f"no language definition registered for: {requested}")
@@ -54,10 +49,28 @@ class CompilerRegistry:
             raise RegistryError(f"ambiguous language definition: {language} ({identities})")
         return matches[0]
 
+    def language_definition_for_extension(self, extension: str) -> LanguageDefinition:
+        """Resolve a source language from a file suffix without a closed catalog."""
+        suffix = extension.strip().lower()
+        if not suffix:
+            raise RegistryError("source extension must not be empty")
+        if not suffix.startswith("."):
+            suffix = "." + suffix
+        with self._lock:
+            matches = [definition for definition in self._languages.values() if definition.matches_extension(suffix)]
+        if not matches:
+            raise RegistryError(f"no language definition registered for extension: {suffix}")
+        if len(matches) > 1:
+            identities = ", ".join(sorted(definition.identity for definition in matches))
+            raise RegistryError(f"ambiguous source extension {suffix}: {identities}")
+        return matches[0]
+
     def register_frontend(self, language: str, frontend: Frontend) -> None:
         key = language.strip()
         if not key:
             raise RegistryError("frontend language must not be empty")
+        if not callable(getattr(frontend, "lower", None)):
+            raise RegistryError("frontend must provide lower(source)")
         with self._lock:
             if key in self._frontends:
                 raise RegistryError(f"frontend already registered: {key}")
@@ -67,21 +80,30 @@ class CompilerRegistry:
         key = target.strip()
         if not key:
             raise RegistryError("backend target must not be empty")
+        if not callable(getattr(backend, "emit", None)) or not callable(getattr(backend, "supports_target", None)):
+            raise RegistryError("backend must provide supports_target() and emit()")
         with self._lock:
             if key in self._backends:
                 raise RegistryError(f"backend already registered: {key}")
             self._backends[key] = backend
 
     def frontend(self, language: str) -> Frontend:
+        key = language.strip()
         with self._lock:
             try:
-                return self._frontends[language]
+                return self._frontends[key]
             except KeyError as exc:
-                raise RegistryError(f"no frontend registered for: {language}") from exc
+                raise RegistryError(f"no frontend registered for: {key}") from exc
+
+    def frontend_for_extension(self, extension: str) -> Frontend:
+        """Resolve the executable frontend through the registered language contract."""
+        definition = self.language_definition_for_extension(extension)
+        return self.frontend(definition.name)
 
     def backend(self, target: str) -> Backend:
+        key = target.strip()
         with self._lock:
             try:
-                return self._backends[target]
+                return self._backends[key]
             except KeyError as exc:
-                raise RegistryError(f"no backend registered for: {target}") from exc
+                raise RegistryError(f"no backend registered for: {key}") from exc
