@@ -1,7 +1,8 @@
-from omni.source_compiler import compile_source, default_compiler_registry, resolve_source
-from omni.registry import CompilerRegistry, RegistryError
 from omni.frontends import SourceUnit
-from omni.uir import UIR
+from omni.language_definition import LanguageDefinition
+from omni.registry import CompilerRegistry, RegistryError
+from omni.source_compiler import compile_source, resolve_source
+from omni.uir import UIR, validate_uir
 
 
 class EchoFrontend:
@@ -9,7 +10,7 @@ class EchoFrontend:
 
     def lower(self, source: SourceUnit) -> UIR:
         assert source.language == "FutureLang"
-        return UIR.from_dict({
+        return validate_uir({
             "version": "0.1",
             "entity": {"kind": "program", "name": source.origin or "future"},
             "source": {"language": "FutureLang", "version": "1", "extension": ".fl"},
@@ -38,7 +39,6 @@ def test_source_compiler_lowers_native_oi_into_semantic_pipeline():
 
 def test_custom_language_can_be_resolved_without_changing_pipeline():
     registry = CompilerRegistry()
-    from omni.language_definition import LanguageDefinition
     definition = LanguageDefinition(name="FutureLang", version="1", source_extensions=(".fl",))
     registry.register_language_definition(definition)
     frontend = EchoFrontend()
