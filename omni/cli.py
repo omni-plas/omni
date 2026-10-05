@@ -22,6 +22,7 @@ from .language_pack import LanguagePackError, dump_language_pack, load_language_
 from .pipeline import compile_semantics
 from .runtime import execute_module
 from .serialization import loads_uir
+from .source_compiler import compile_source
 from .source_files import is_omni_source_path
 from .target_pack import TargetPackError, dump_target_pack, load_target_pack
 from .targets import TargetDescriptor
@@ -40,7 +41,7 @@ def build_parser() -> argparse.ArgumentParser:
     build = subparsers.add_parser("build", help="build native Omni source into a portable artifact")
     build.add_argument("source", type=Path)
     build.add_argument("-o", "--output", type=Path, required=True)
-    native_exec = subparsers.add_parser("native-exec", help="compile a UIR JSON program to a self-contained native executable")
+    native_exec = subparsers.add_parser("native-exec", help="compile Omni .oi or UIR JSON into a self-contained native executable")
     native_exec.add_argument("source", type=Path)
     native_exec.add_argument("-o", "--output", type=Path, required=True)
     native_exec.add_argument("--target", default="linux", help="target platform identifier")
@@ -107,6 +108,16 @@ def _validate_native(path: Path) -> int:
     return 0
 
 
+def _compile_source_for_native(path: Path):
+    if is_omni_source_path(path):
+        result = compile_source(path.read_text(encoding="utf-8"), origin=path)
+    else:
+        result = compile_semantics(_load(path))
+    if not result.ok or result.ir is None:
+        raise OmniError(format_diagnostics(result.diagnostics))
+    return result.ir
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
@@ -152,13 +163,9 @@ def main(argv: list[str] | None = None) -> int:
             args.output.write_bytes(artifact.payload)
             return 0
         if args.command == "native-exec":
-            document = _load(args.source)
-            result = compile_semantics(document)
-            if not result.ok or result.ir is None:
-                print(format_diagnostics(result.diagnostics), file=sys.stderr)
-                return 2
+            result_ir = _compile_source_for_native(args.source)
             target = TargetDescriptor(args.target, args.architecture, "sysv", {"native-executable": True})
-            executable = compile_native_executable(result.ir, target)
+            executable = compile_native_executable(result_ir, target)
             write_native_executable(args.output, executable)
             return 0
         if args.command == "validate":
