@@ -103,3 +103,13 @@ class ModuleIR:
             if not isinstance(global_name, str) or not global_name.strip():
                 raise ValueError("global name must not be empty")
             value.type.validate()
+
+
+@dataclass(frozen=True)
+class IRModule:
+    """Legacy module shape retained as a compatibility facade."""
+    functions: tuple[FunctionIR, ...]
+
+    def validate(self) -> None:
+        for function in self.functions:
+            function.validate()
