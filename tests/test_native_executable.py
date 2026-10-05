@@ -64,3 +64,14 @@ def test_native_branch_from_oi_source_runs(tmp_path):
     path = write_native_executable(tmp_path / "branch", compile_native_executable(result.ir))
     completed = subprocess.run([str(path)], check=False)
     assert completed.returncode == 42
+
+
+def test_native_while_loop_from_oi_source_runs(tmp_path):
+    result = compile_source(
+        "fn main() { let x = 3; while (x > 0) { x = x - 1; } return x; }",
+        origin="loop.oi",
+    )
+    assert result.ok and result.ir is not None
+    path = write_native_executable(tmp_path / "loop", compile_native_executable(result.ir))
+    completed = subprocess.run([str(path)], check=False)
+    assert completed.returncode == 0
