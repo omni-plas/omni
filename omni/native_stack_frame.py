@@ -13,6 +13,10 @@ class StackFrame:
     outgoing_size: int
     saved_size: int
 
+    @property
+    def cleanup_bytes(self) -> int:
+        return self.size
+
 def make_frame(local_size: int = 0, outgoing_size: int = 0, saved_size: int = 0) -> StackFrame:
     if min(local_size, outgoing_size, saved_size) < 0:
         raise ValueError("frame sizes must be non-negative")
