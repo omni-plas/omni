@@ -27,6 +27,18 @@ def test_cli_validates_and_builds_canonical_oi_source(tmp_path: Path, capsys):
     assert document["semantics"]["program"]["entry"] == "main"
 
 
+def test_cli_compiles_canonical_oi_source_to_native_executable(tmp_path: Path):
+    source = tmp_path / "hello.oi"
+    source.write_text("fn main() { let answer = 40 + 2; return answer; }", encoding="utf-8")
+    output = tmp_path / "hello"
+
+    assert main(["native-exec", str(source), "--output", str(output)]) == 0
+    payload = output.read_bytes()
+    assert payload[:4] == b"\x7fELF"
+    assert payload[4] == 2
+    assert output.stat().st_mode & 0o111
+
+
 def test_cli_canonicalizes_language_pack(tmp_path: Path, capsys):
     source = tmp_path / "future.json"
     source.write_text(
