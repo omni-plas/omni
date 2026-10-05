@@ -1,3 +1,5 @@
+import subprocess
+
 from omni.ir import BasicBlock, FunctionIR, ModuleIR, Operation
 from omni.native_executable import compile_native_executable, write_native_executable
 from omni.targets import TargetDescriptor
@@ -32,3 +34,10 @@ def test_native_executable_is_materialized(tmp_path):
     path = write_native_executable(tmp_path / "answer", executable)
     assert path.read_bytes() == executable.payload
     assert path.stat().st_mode & 0o111
+
+
+def test_native_executable_runs_and_returns_integer(tmp_path):
+    executable = compile_native_executable(_module())
+    path = write_native_executable(tmp_path / "answer", executable)
+    completed = subprocess.run([str(path)], check=False)
+    assert completed.returncode == 42
