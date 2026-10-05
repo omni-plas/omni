@@ -2,6 +2,7 @@ import subprocess
 
 from omni.ir import BasicBlock, FunctionIR, ModuleIR, Operation
 from omni.native_executable import compile_native_executable, write_native_executable
+from omni.source_compiler import compile_source
 from omni.targets import TargetDescriptor
 from omni.types import TypeKind, TypeRef
 
@@ -39,5 +40,27 @@ def test_native_executable_is_materialized(tmp_path):
 def test_native_executable_runs_and_returns_integer(tmp_path):
     executable = compile_native_executable(_module())
     path = write_native_executable(tmp_path / "answer", executable)
+    completed = subprocess.run([str(path)], check=False)
+    assert completed.returncode == 42
+
+
+def test_multi_function_native_call_runs(tmp_path):
+    result = compile_source(
+        "fn add(a, b) { return a + b; } fn main() { return add(40, 2); }",
+        origin="call.oi",
+    )
+    assert result.ok and result.ir is not None
+    path = write_native_executable(tmp_path / "call", compile_native_executable(result.ir))
+    completed = subprocess.run([str(path)], check=False)
+    assert completed.returncode == 42
+
+
+def test_native_branch_from_oi_source_runs(tmp_path):
+    result = compile_source(
+        "fn main() { let x = 40; if (x == 40) { return 42; } else { return 1; } }",
+        origin="branch.oi",
+    )
+    assert result.ok and result.ir is not None
+    path = write_native_executable(tmp_path / "branch", compile_native_executable(result.ir))
     completed = subprocess.run([str(path)], check=False)
     assert completed.returncode == 42
