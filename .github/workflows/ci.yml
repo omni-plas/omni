@@ -24,6 +24,8 @@ jobs:
       - run: omni --help
       - run: omni validate examples/hello.oi
       - run: omni build examples/hello.oi --output /tmp/hello.omni-artifact
+      - run: omni native-exec examples/hello.oi --output /tmp/hello-native
+      - run: /tmp/hello-native || test $? -eq 42
       - run: omni language-pack examples/languages/futurelang.json
       - run: omni target-pack examples/targets/future-os.json
 
@@ -41,5 +43,7 @@ jobs:
       - run: python -m pip install dist/*.whl
       - run: omni --help
       - run: omni validate examples/hello.oi
+      - run: omni native-exec examples/hello.oi --output /tmp/hello-native
+      - run: /tmp/hello-native || test $? -eq 42
       - run: omni language-pack examples/languages/futurelang.json
       - run: omni target-pack examples/targets/future-os.json
