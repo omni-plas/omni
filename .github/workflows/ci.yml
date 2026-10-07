@@ -3,6 +3,7 @@ name: Omni CI
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 jobs:
   test:
@@ -21,6 +22,7 @@ jobs:
       - run: python -m pip install -e ".[dev]"
       - run: python -m compileall -q omni
       - run: python -m pytest -q
+      - run: python -m pytest tests/test_source_compiler.py -q
       - run: omni --help
       - run: omni validate examples/hello.oi
       - run: omni build examples/hello.oi --output /tmp/hello.omni-artifact
