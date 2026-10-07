@@ -142,9 +142,9 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "plugin-list":
             registry, report = discover_default_plugins(strict=args.strict)
             payload = {
-                "languages": sorted(definition.identity for definition in registry._languages.values()),
-                "frontends": sorted(registry._frontends),
-                "backends": sorted(registry._backends),
+                "languages": list(registry.languages()),
+                "frontends": list(registry.frontends()),
+                "backends": list(registry.backends()),
                 "loaded": list(report.loaded),
                 "skipped": list(report.skipped),
                 "errors": list(report.errors),
