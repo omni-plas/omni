@@ -20,6 +20,7 @@ from .native_frontend import OmniNativeFrontend
 from .oi_registration import render_registration_manifest
 from .language_pack import LanguagePackError, dump_language_pack, load_language_pack
 from .pipeline import compile_semantics
+from .plugin_discovery import discover_default_plugins
 from .runtime import execute_module
 from .serialization import loads_uir
 from .source_compiler import compile_source
@@ -57,6 +58,8 @@ def build_parser() -> argparse.ArgumentParser:
     target_pack = subparsers.add_parser("target-pack", help="validate or canonicalize a declarative target definition")
     target_pack.add_argument("source", type=Path)
     target_pack.add_argument("-o", "--output", type=Path, default=None)
+    plugins = subparsers.add_parser("plugin-list", help="list installed Omni language/frontend/backend plugins")
+    plugins.add_argument("--strict", action="store_true", help="fail if an installed plugin cannot be loaded")
     install = subparsers.add_parser("install-plan", help="create a target-neutral installation plan")
     install.add_argument("--target", required=True, help="target platform identifier")
     install.add_argument("--architecture", default=None)
@@ -135,6 +138,18 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(definition.manifest(), ensure_ascii=False, sort_keys=True, indent=2))
             else:
                 dump_language_pack(definition, args.output)
+            return 0
+        if args.command == "plugin-list":
+            registry, report = discover_default_plugins(strict=args.strict)
+            payload = {
+                "languages": sorted(definition.identity for definition in registry._languages.values()),
+                "frontends": sorted(registry._frontends),
+                "backends": sorted(registry._backends),
+                "loaded": list(report.loaded),
+                "skipped": list(report.skipped),
+                "errors": list(report.errors),
+            }
+            print(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2))
             return 0
         if args.command == "target-pack":
             target = load_target_pack(args.source)
