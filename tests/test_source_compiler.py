@@ -1,7 +1,7 @@
 from omni.frontends import SourceUnit
 from omni.language_definition import LanguageDefinition
 from omni.registry import CompilerRegistry, RegistryError
-from omni.source_compiler import compile_source, resolve_source
+from omni.source_compiler import compile_source, discover_compiler_registry, resolve_source
 from omni.uir import UIR, validate_uir
 
 
@@ -35,6 +35,12 @@ def test_source_compiler_lowers_native_oi_into_semantic_pipeline():
     assert result.ok
     assert result.ir is not None
     assert result.ir.functions[0].name == "main"
+
+
+def test_plugin_aware_registry_keeps_native_omni_available():
+    registry = discover_compiler_registry()
+    assert registry.language_definition("omni").identity == "Omni@1"
+    assert registry.frontend("Omni").language == "omni"
 
 
 def test_custom_language_can_be_resolved_without_changing_pipeline():
