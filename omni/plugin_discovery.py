@@ -2,16 +2,15 @@
 
 Omni keeps its core registry explicit, while this module provides a standard
 extension seam for separately packaged implementations. Discovery is best
--effort by default so a broken optional plugin cannot silently replace the
-core compiler.
+effort by default so a broken optional plugin cannot silently replace the core
+compiler.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
 from importlib import metadata
-from typing import Any, Callable
+from typing import Any
 
-from .backend import BackendRegistry
 from .language_definition import LanguageDefinition
 from .registry import CompilerRegistry, RegistryError
 
@@ -19,6 +18,7 @@ from .registry import CompilerRegistry, RegistryError
 LANGUAGE_GROUP = "omni.languages"
 FRONTEND_GROUP = "omni.frontends"
 BACKEND_GROUP = "omni.backends"
+_SUPPORTED_GROUPS = {LANGUAGE_GROUP, FRONTEND_GROUP, BACKEND_GROUP}
 
 
 @dataclass(frozen=True)
@@ -45,13 +45,12 @@ def discover_plugins(
     strict: bool = False,
     groups: tuple[str, ...] = (LANGUAGE_GROUP, FRONTEND_GROUP, BACKEND_GROUP),
 ) -> PluginDiscoveryReport:
-    """Load installed Omni plugins into a registry deterministically.
-
-    Entry-point names are sorted before loading. In non-strict mode failures
-    are reported and skipped; strict mode raises the first plugin error.
-    """
+    """Load installed Omni plugins into a registry deterministically."""
     if not isinstance(registry, CompilerRegistry):
         raise TypeError("registry must be a CompilerRegistry")
+    unknown = tuple(group for group in groups if group not in _SUPPORTED_GROUPS)
+    if unknown:
+        raise RegistryError("unsupported plugin group(s): " + ", ".join(unknown))
 
     loaded: list[str] = []
     skipped: list[str] = []
@@ -70,8 +69,6 @@ def discover_plugins(
                     registry.register_frontend(value.language, value)
                 elif group == BACKEND_GROUP:
                     registry.register_backend(value.name, value)
-                else:
-                    raise RegistryError(f"unsupported plugin group: {group}")
                 loaded.append(label)
             except Exception as exc:
                 message = f"{label}: {exc}"
