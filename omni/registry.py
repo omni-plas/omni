@@ -100,6 +100,18 @@ class CompilerRegistry:
         definition = self.language_definition_for_extension(extension)
         return self.frontend(definition.name)
 
+    def languages(self) -> tuple[str, ...]:
+        with self._lock:
+            return tuple(sorted(self._languages))
+
+    def frontends(self) -> tuple[str, ...]:
+        with self._lock:
+            return tuple(sorted(self._frontends))
+
+    def backends(self) -> tuple[str, ...]:
+        with self._lock:
+            return tuple(sorted(self._backends))
+
     def backend(self, target: str) -> Backend:
         key = target.strip()
         with self._lock:
