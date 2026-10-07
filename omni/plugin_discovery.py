@@ -36,7 +36,11 @@ def _entry_points(group: str):
 
 
 def _materialize(value: Any) -> Any:
-    return value() if callable(value) and not isinstance(value, type) else value
+    if isinstance(value, type):
+        return value()
+    if callable(value) and not any(hasattr(value, attr) for attr in ("lower", "parse", "supports_target", "emit")):
+        return value()
+    return value
 
 
 def discover_plugins(
