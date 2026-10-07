@@ -20,7 +20,7 @@ class ResolvedSource:
     frontend: object
 
 
-def default_compiler_registry() -> CompilerRegistry:
+def default_compiler_registry(*, include_plugins: bool = False) -> CompilerRegistry:
     """Build a minimal registry containing Omni's native frontend.
 
     Additional language definitions and frontends can be registered by callers;
@@ -43,6 +43,17 @@ def default_compiler_registry() -> CompilerRegistry:
         )
     )
     registry.register_frontend("Omni", OmniNativeFrontend())
+    if include_plugins:
+        from .plugin_discovery import discover_plugins
+        discover_plugins(registry)
+    return registry
+
+
+def discover_compiler_registry(*, strict: bool = False) -> CompilerRegistry:
+    """Create the native compiler registry and load installed plugins."""
+    registry = default_compiler_registry()
+    from .plugin_discovery import discover_plugins
+    discover_plugins(registry, strict=strict)
     return registry
 
 
