@@ -96,3 +96,11 @@ def test_cli_manifest_carries_artifacts_and_metadata(capsys):
 def test_cli_rejects_invalid_metadata(capsys):
     assert main(["install-plan", "--target", "os", "--format", "pkg", "--metadata", "invalid"]) == 2
     assert "KEY=VALUE" in capsys.readouterr().err
+
+
+def test_cli_lists_native_plugin_inventory(capsys):
+    assert main(["plugin-list"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert "Omni@1" in payload["languages"]
+    assert "Omni" in payload["frontends"]
+    assert payload["errors"] == []
