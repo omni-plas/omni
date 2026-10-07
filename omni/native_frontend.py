@@ -11,6 +11,7 @@ import re
 from typing import Any
 
 from .frontends import SourceUnit
+from .frontends import SourceUnit
 from .omni_lowering import lower_source
 from .uir import UIR, validate_uir
 
@@ -85,6 +86,14 @@ class OmniNativeFrontend:
             },
         }
         return validate_uir(document)
+
+    def lower(self, source: SourceUnit) -> UIR:
+        """Lower a registered Omni source unit through the canonical parser."""
+        if not isinstance(source, SourceUnit):
+            raise TypeError("source must be a SourceUnit")
+        if source.language.strip().casefold() != self.language:
+            raise ValueError(f"unsupported source language: {source.language}")
+        return self.parse(source.text, filename=source.origin or "<source>")
 
     def parse(self, source: str, *, filename: str = "<source>") -> UIR:
         if not isinstance(source, str) or not source.strip():
