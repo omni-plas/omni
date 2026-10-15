@@ -5,7 +5,6 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 
-from .backends import Artifact
 from .targets import TargetDescriptor
 
 
@@ -70,3 +69,37 @@ def manifest(
         name=name,
         kind=kind,
     )
+
+
+@dataclass(frozen=True)
+class Artifact:
+    """Materializable, target-bound artifact descriptor.
+
+    This is distinct from a backend emission result: it records the logical
+    artifact identity used by packaging/materialization and can optionally
+    carry its content bytes for a real content digest.
+    """
+
+    name: str
+    kind: str
+    target: TargetDescriptor
+    format: str
+    payload: bytes = b""
+
+    def __post_init__(self) -> None:
+        for label, value in (("name", self.name), ("kind", self.kind), ("format", self.format)):
+            if not isinstance(value, str) or not value.strip():
+                raise ArtifactError(f"artifact {label} must not be empty")
+        if not isinstance(self.target, TargetDescriptor):
+            raise TypeError("artifact target must be a TargetDescriptor")
+        if not isinstance(self.payload, bytes):
+            raise TypeError("artifact payload must be bytes")
+
+    @property
+    def manifest(self) -> ArtifactManifest:
+        return manifest(
+            self.payload, self.target, self.format, name=self.name.strip(), kind=self.kind.strip()
+        )
+
+    def identity(self) -> str:
+        return self.manifest.identity()
