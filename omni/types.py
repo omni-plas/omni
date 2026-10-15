@@ -11,6 +11,7 @@ class TypeKind(str, Enum):
     VOID = "void"
     BOOL = "bool"
     INTEGER = "integer"
+    INT = "integer"  # Backward-compatible alias
     FLOAT = "float"
     STRING = "string"
     BYTES = "bytes"
@@ -33,10 +34,18 @@ class TypeRef:
     fields: Mapping[str, "TypeRef"] = field(default_factory=dict)
     nullable: bool = False
     metadata: Mapping[str, Any] = field(default_factory=dict)
+    bits: int | None = None
+    signed: bool | None = None
 
     def validate(self) -> None:
         if self.name is not None and (not isinstance(self.name, str) or not self.name.strip()):
             raise ValueError("type name cannot be empty")
+        if self.bits is not None and (not isinstance(self.bits, int) or isinstance(self.bits, bool) or self.bits <= 0):
+            raise ValueError("type bit width must be a positive integer")
+        if self.signed is not None and not isinstance(self.signed, bool):
+            raise ValueError("type signedness must be boolean when supplied")
+        if self.kind != TypeKind.INTEGER and (self.bits is not None or self.signed is not None):
+            raise ValueError("bit width and signedness are only valid for integer types")
         if self.kind in {TypeKind.STRUCT} and not self.fields and not self.name:
             raise ValueError("struct type requires fields or a name")
         if self.kind in {TypeKind.ARRAY, TypeKind.POINTER, TypeKind.RESOURCE} and not self.parameters:
@@ -59,6 +68,10 @@ class TypeRef:
         parts = [self.kind.value]
         if self.name:
             parts.append(f"name={self.name}")
+        if self.bits is not None:
+            parts.append(f"bits={self.bits}")
+        if self.signed is not None:
+            parts.append(f"signed={self.signed}")
         if self.nullable:
             parts.append("nullable")
         if self.parameters:
