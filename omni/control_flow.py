@@ -39,7 +39,9 @@ def analyze_control_flow(function: FunctionIR) -> ControlFlowGraph:
             if not block.successors:
                 raise ControlFlowError(f"branch block has no successors: {block.name}")
             if terminator == "branch" and len(block.successors) != 2:
-                raise ControlFlowError(f"conditional branch requires two successors: {block.name}")
+                op = block.operations[-1]
+                if len(block.successors) != 1 or "true" in op.attributes or "false" in op.attributes:
+                    raise ControlFlowError(f"conditional branch requires two successors: {block.name}")
             if terminator == "jump" and len(block.successors) != 1:
                 raise ControlFlowError(f"jump requires one successor: {block.name}")
         if terminator not in {None, "return", "ret", "branch", "cond_branch", "jump"} and block.successors:
