@@ -63,21 +63,38 @@ def lower_to_ir(document: Mapping[str, Any] | UIR) -> ModuleIR:
             for key, value in dict(function.get("parameters", {})).items()
         }
         result = _type_from_spec(function.get("result", "void"))
-        operations = tuple(
-            Operation(
+        def lower_operation(op: Mapping[str, Any]) -> Operation:
+            if not isinstance(op, Mapping):
+                raise UIRValidationError(f"function {name} operations must be objects")
+            return Operation(
                 opcode=str(op.get("opcode")),
                 inputs=tuple(str(x) for x in op.get("inputs", ())),
                 outputs=tuple(str(x) for x in op.get("outputs", ())),
                 attributes=dict(op.get("attributes", {})),
             )
-            for op in function.get("operations", ())
-        )
-        block = BasicBlock(
-            name="entry",
-            operations=operations,
-            successors=(),
-        )
-        functions.append(FunctionIR(name=name, parameters=parameters, result=result, blocks=(block,)))
+
+        cfg = function.get("control_flow", {})
+        raw_blocks = cfg.get("blocks", ()) if isinstance(cfg, Mapping) else ()
+        if raw_blocks:
+            blocks = []
+            for raw_block in raw_blocks:
+                if not isinstance(raw_block, Mapping):
+                    raise UIRValidationError(f"function {name} control-flow blocks must be objects")
+                block_name = raw_block.get("name")
+                if not isinstance(block_name, str) or not block_name.strip():
+                    raise UIRValidationError(f"function {name} block name must be non-empty")
+                blocks.append(BasicBlock(
+                    name=block_name,
+                    operations=tuple(lower_operation(op) for op in raw_block.get("operations", ())),
+                    successors=tuple(str(x) for x in raw_block.get("successors", ())),
+                ))
+        else:
+            blocks = [BasicBlock(
+                name="entry",
+                operations=tuple(lower_operation(op) for op in function.get("operations", ())),
+                successors=(),
+            )]
+        functions.append(FunctionIR(name=name, parameters=parameters, result=result, blocks=tuple(blocks)))
 
     module = ModuleIR(name=module_name, types=declared_types, functions=tuple(functions))
     module.validate()
