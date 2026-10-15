@@ -13,7 +13,8 @@ class SemanticModule:
 
 def analyze(module):
     seen=set(); functions=[]
-    for fn in module.functions:
+    source_functions = getattr(module, "functions", module)
+    for fn in source_functions:
         if fn.name in seen: raise ValueError(f"duplicate function: {fn.name}")
         seen.add(fn.name)
         params=tuple(fn.parameters)
