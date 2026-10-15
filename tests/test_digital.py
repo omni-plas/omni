@@ -12,7 +12,7 @@ def test_digital_spec_is_open_world():
         interfaces=("future-interface",),
     )
     plan = plan_construction(spec)
-    assert plan.steps == ("validate", "model", "lower", "materialize", "verify")
+    assert plan.steps == ("validate", "define-entity", "define-interfaces", "define-behavior", "materialize", "verify")
     assert plan.artifact.kind == "future-digital-artifact"
 
 
