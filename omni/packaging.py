@@ -63,7 +63,7 @@ class PackageManifest:
             "schema": "omni.package.v1",
             "name": self.name.strip(),
             "version": self.version.strip(),
-            "target": self.target.serialize(),
+            "target": self.target.document(),
             "artifacts": list(self.artifacts),
             "dependencies": list(self.dependencies),
             "metadata": dict(self.metadata),
