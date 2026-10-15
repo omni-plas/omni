@@ -56,7 +56,7 @@ def _compile_function(fn,known):
                 a,b=get(op.inputs[0]),get(op.inputs[1])
                 try: dst=next(free)
                 except StopIteration as e: raise NativeCodegenError('register limit exceeded') from e
-                code+=_rr(b'\x39',a,b)+_mov_imm(dst,0)+_jcc(cc,10)+_mov_imm(dst,1); regs[op.outputs[0]]=dst
+                code+=_rr(b'\x39',a,b)+_mov_imm(dst,0)+_jcc({4:5,5:4,12:13,13:12,14:15,15:14}[cc],10)+_mov_imm(dst,1); regs[op.outputs[0]]=dst
             elif op.opcode in {'and','or'}:
                 if len(op.inputs)!=2 or len(op.outputs)!=1: raise NativeCodegenError(f'{op.opcode} arity')
                 a,b=get(op.inputs[0]),get(op.inputs[1])
