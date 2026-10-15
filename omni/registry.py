@@ -95,10 +95,37 @@ class CompilerRegistry:
             except KeyError as exc:
                 raise RegistryError(f"no frontend registered for: {key}") from exc
 
+    def frontend_for_language(self, language: str, version: str | None = None) -> Frontend:
+        """Resolve an executable frontend by language name or declared alias.
+
+        Versioned definitions remain the authority for aliases. A direct frontend
+        lookup is retained for legacy extensions that have not registered a
+        LanguageDefinition yet.
+        """
+        key = language.strip()
+        if not key:
+            raise RegistryError("frontend language must not be empty")
+        try:
+            definition = self.language_definition(key, version)
+        except RegistryError as exc:
+            # Only fall back when there is no definition. Ambiguous aliases must
+            # remain an error rather than silently selecting an arbitrary plugin.
+            if not str(exc).startswith("no language definition registered for:"):
+                raise
+            if version is not None:
+                raise
+            return self.frontend(key)
+        return self.frontend(definition.name)
+
     def frontend_for_extension(self, extension: str) -> Frontend:
         """Resolve the executable frontend through the registered language contract."""
         definition = self.language_definition_for_extension(extension)
-        return self.frontend(definition.name)
+        try:
+            return self.frontend(definition.name)
+        except RegistryError as exc:
+            raise RegistryError(
+                f"language {definition.identity} has a definition but no executable frontend"
+            ) from exc
 
     def languages(self) -> tuple[str, ...]:
         with self._lock:
