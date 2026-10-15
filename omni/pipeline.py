@@ -12,7 +12,7 @@ from .ir import ModuleIR
 from .lower import lower_to_ir
 from .optimize import optimize_module
 from .typecheck import check_module
-from .uir import UIR, UIRValidationError, validate_uir
+from .uir import UIR, validate_uir
 from .validation import SemanticValidationError, validate_module
 
 
@@ -33,8 +33,6 @@ def compile_semantics(document: Mapping[str, Any] | UIR) -> CompilationResult:
         uir = document if isinstance(document, UIR) else validate_uir(document)
         plan = plan_compilation(uir)
         ir = lower_to_ir(uir)
-    except UIRValidationError:
-        raise
     except (ValueError, TypeError) as exc:
         raise ValidationError(str(exc)) from exc
 
