@@ -78,7 +78,14 @@ def _function(function,signatures):
             current=exit_b; return
         raise OmniLoweringError(f"unsupported statement: {type(s).__name__}")
     for s in function.body:stmt(s)
-    if current is not None:raise OmniLoweringError(f"function has no return: {function.name}")
+    if current is not None:
+        if result_type.kind == TypeKind.VOID:
+            # Void functions may finish implicitly; materialize the return so
+            # every lowered control-flow path has an explicit terminator.
+            current["operations"].append(Operation("return"))
+            current = None
+        else:
+            raise OmniLoweringError(f"function has no return: {function.name}")
     return FunctionIR(function.name,{name:_INT for name in function.parameters},result_type,tuple(BasicBlock(b["name"],tuple(b["operations"]),tuple(b["successors"])) for b in blocks if b["operations"] or b["successors"]))
 def lower_program(program:Program,*,module_name="omni_module"):
     if not program.functions:raise OmniLoweringError("program contains no functions")
