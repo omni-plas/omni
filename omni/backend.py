@@ -74,4 +74,4 @@ class GenericArtifactBackend:
             raise BackendError(f"backend does not support {plan.target.identity()}")
         import json
         payload = (json.dumps(uir.to_dict(), ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
-        return Artifact(plan.target, payload, "json")
+        return Artifact(plan.target, payload, "json", name=uir.entity_name, kind=uir.entity_kind)
