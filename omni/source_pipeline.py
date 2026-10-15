@@ -1,4 +1,4 @@
-""""Open-world source-to-artifact orchestration."""
+"""Open-world source-to-artifact orchestration."""
 
 from __future__ import annotations
 
