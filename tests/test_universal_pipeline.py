@@ -18,7 +18,19 @@ class FutureFrontend:
             {"kind": "future.entity"},
             {"language": self.language, "filename": filename},
             target.document(),
-            {"program": source, "behavior": {"source": source}},
+            {
+                "program": source,
+                "behavior": {"source": source},
+                "types": {},
+                "control_flow": {"model": "frontend-defined"},
+                "data_flow": {"model": "frontend-defined"},
+                "memory_model": {"model": "frontend-defined"},
+                "error_handling": {"model": "frontend-defined"},
+                "io": {"model": "frontend-defined"},
+                "dependencies": [],
+                "security": {"model": "frontend-defined"},
+                "performance": {"model": "frontend-defined"},
+            },
         )
 
 
