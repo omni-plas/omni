@@ -75,3 +75,28 @@ def test_registry_rejects_unusable_frontend_and_backend():
         registry.register_frontend("broken", object())
     with pytest.raises(RegistryError, match="supports_target"):
         registry.register_backend("broken", object())
+
+
+def test_registry_resolves_frontend_from_language_alias_and_version():
+    registry = CompilerRegistry()
+    definition = LanguageDefinition(
+        name="FutureLang",
+        version="2.0",
+        aliases=("future",),
+        source_extensions=("fl",),
+    )
+    frontend = DummyFrontend()
+    registry.register_language_definition(definition)
+    registry.register_frontend("FutureLang", frontend)
+
+    assert registry.frontend_for_language("future") is frontend
+    assert registry.frontend_for_language("FUTURE", "2.0") is frontend
+
+
+def test_registry_reports_definition_without_executable_frontend():
+    registry = CompilerRegistry()
+    registry.register_language_definition(
+        LanguageDefinition(name="FutureLang", version="1", source_extensions=("fl",))
+    )
+    with pytest.raises(RegistryError, match="definition but no executable frontend"):
+        registry.frontend_for_extension("fl")
