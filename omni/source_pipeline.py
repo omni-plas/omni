@@ -1,4 +1,4 @@
-"""Open-world source-to-artifact orchestration."""
+""""Open-world source-to-artifact orchestration."""
 
 from __future__ import annotations
 
@@ -35,13 +35,18 @@ def compile_source(
 ) -> SourceCompilationResult:
     if not isinstance(source, str):
         raise TypeError("source must be a string")
-    frontend = frontends.resolve(language, version=version, extension=extension)
+    try:
+        frontend = frontends.resolve(language, version=version, extension=extension)
+    except (LookupError, ValueError) as exc:
+        raise SourcePipelineError(f"unable to resolve source language {language!r}: {exc}") from exc
+
     try:
         uir: UIR = frontend.parse(source, filename=filename)
         if target is not None:
             uir = apply_target_context(uir, target)
     except Exception as exc:
         raise SourcePipelineError(f"frontend {frontend.language} failed to parse source: {exc}") from exc
+
     try:
         result = compile_uir(uir, backends)
     except Exception as exc:
