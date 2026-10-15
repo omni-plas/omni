@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Mapping
 
-from .types import TypeRef
+from .types import TypeKind, TypeRef
 
 
 @dataclass(frozen=True)
@@ -59,9 +59,9 @@ class BasicBlock:
 @dataclass(frozen=True)
 class FunctionIR:
     name: str
-    parameters: Mapping[str, TypeRef]
-    result: TypeRef
-    blocks: tuple[BasicBlock, ...]
+    parameters: Mapping[str, TypeRef] = field(default_factory=dict)
+    result: TypeRef = field(default_factory=lambda: TypeRef(TypeKind.VOID))
+    blocks: tuple[BasicBlock, ...] = ()
     metadata: Mapping[str, Any] = field(default_factory=dict)
 
     def validate(self) -> None:
