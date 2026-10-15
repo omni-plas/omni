@@ -5,13 +5,13 @@ from __future__ import annotations
 from typing import Any, Mapping
 
 from .entities import EntitySpec
-from .errors import ValidationError
+from .uir import UIRValidationError
 
 
 def entity_from_mapping(document: Mapping[str, Any]) -> EntitySpec:
     """Build and validate an EntitySpec without restricting its kind."""
     if not isinstance(document, Mapping):
-        raise ValidationError("entity specification must be an object")
+        raise UIRValidationError("entity specification must be an object")
     inputs = tuple(document.get("inputs", ()))
     outputs = tuple(document.get("outputs", ()))
     entity = EntitySpec(
@@ -27,5 +27,5 @@ def entity_from_mapping(document: Mapping[str, Any]) -> EntitySpec:
     try:
         entity.validate()
     except (TypeError, ValueError) as exc:
-        raise ValidationError(str(exc)) from exc
+        raise UIRValidationError(str(exc)) from exc
     return entity
