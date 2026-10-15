@@ -41,7 +41,7 @@ class OmniNativeFrontend:
         }
 
     def _parse_program(self, source: str, *, filename: str) -> UIR:
-        module = lower_source(source, module_name=filename)
+        module = lower_source(source, module_name=filename, strict_calls=False)
         functions: list[dict[str, Any]] = []
         for function in module.functions:
             blocks = [
