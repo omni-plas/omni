@@ -4,7 +4,10 @@ from omni.types import TypeKind, TypeRef
 
 
 def _function(name):
-    return FunctionIR(name, {}, TypeRef(TypeKind.VOID), (BasicBlock("entry", (Operation("return"),)),))
+    return FunctionIR(
+        name, {}, TypeRef(TypeKind.INTEGER),
+        (BasicBlock("entry", (Operation("const", outputs=("result",), attributes={"value": 0}), Operation("return", inputs=("result",)))),),
+    )
 
 
 def test_dead_function_is_excluded():
