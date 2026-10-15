@@ -48,7 +48,7 @@ def analyze_control_flow(function: FunctionIR) -> ControlFlowGraph:
             raise ControlFlowError(f"block {block.name} has successors without a control-flow terminator")
         if terminator == "branch":
             op = block.operations[-1]
-            if op.opcode == "branch":
+            if op.opcode == "branch" and ("true" in op.attributes or "false" in op.attributes):
                 true_target = op.attributes.get("true")
                 false_target = op.attributes.get("false")
                 if (true_target, false_target) != tuple(block.successors):
