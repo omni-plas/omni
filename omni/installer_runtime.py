@@ -45,7 +45,7 @@ def inspect_installer(payload: bytes) -> dict:
 def extract_installer(payload: bytes, destination: str | Path, *, plan: InstallationPlan | None = None) -> Path:
     info = inspect_installer(payload)
     manifest = info["manifest"]
-    if plan is not None and manifest.get("target") != plan.target.identity():
+    if plan is not None and manifest.get("target") not in (plan.target.identity(), plan.target.document()):
         raise InstallerRuntimeError("installer target does not match requested installation plan")
     root = Path(destination)
     root.mkdir(parents=True, exist_ok=True)
