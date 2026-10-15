@@ -8,7 +8,11 @@ def document():
         "entity": {"kind": "application", "name": "demo"},
         "source": {"language": "omni", "version": "1"},
         "target": {"platform": "future-os", "capabilities": {"semantic-artifact": True}},
-        "semantics": {"program": {"entry": "main"}},
+        "semantics": {
+            "program": {"entry": "main"}, "types": {}, "control_flow": {}, "data_flow": {},
+            "memory_model": {}, "error_handling": {}, "io": {}, "dependencies": [],
+            "security": {}, "performance": {},
+        },
     }
 
 
