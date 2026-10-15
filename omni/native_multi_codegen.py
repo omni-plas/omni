@@ -38,12 +38,27 @@ def _compile_function(fn,known):
                 try: dst=next(free)
                 except StopIteration as e: raise NativeCodegenError('register limit exceeded') from e
                 regs[op.outputs[0]]=dst; code+=_mov_imm(dst,value)
-            elif op.opcode in {'add','sub','mul'}:
+            elif op.opcode in {'add','sub','mul','div'}:
                 if len(op.inputs)!=2 or len(op.outputs)!=1: raise NativeCodegenError('binary operation arity')
                 a,b=get(op.inputs[0]),get(op.inputs[1])
-                try: dst=next(free)
-                except StopIteration as e: raise NativeCodegenError('register limit exceeded') from e
-                code+=_mov_rr(dst,a)+_rr({'add':b'\x01','sub':b'\x29','mul':b'\x0f\xaf'}[op.opcode],dst,b); regs[op.outputs[0]]=dst
+                if op.opcode=='div':
+                    # idiv consumes RDX:RAX. Preserve any live value currently
+                    # assigned to RDX before using it as the high dividend word.
+                    rdx_names=[name for name,reg in regs.items() if reg==2 and name not in op.outputs]
+                    if rdx_names:
+                        try: saved=next(free)
+                        except StopIteration as e: raise NativeCodegenError('register limit exceeded') from e
+                        code+=_mov_rr(saved,2)
+                        for name in rdx_names: regs[name]=saved
+                        a,b=get(op.inputs[0]),get(op.inputs[1])
+                    try: dst=next(free)
+                    except StopIteration as e: raise NativeCodegenError('register limit exceeded') from e
+                    code+=_mov_rr(0,a)+b'\x48\x99'+_rex(b=(b>>3)&1)+b'\xf7'+bytes([0xf8|(b&7)])+_mov_rr(dst,0)
+                else:
+                    try: dst=next(free)
+                    except StopIteration as e: raise NativeCodegenError('register limit exceeded') from e
+                    code+=_mov_rr(dst,a)+_rr({'add':b'\x01','sub':b'\x29','mul':b'\x0f\xaf'}[op.opcode],dst,b)
+                regs[op.outputs[0]]=dst
             elif op.opcode=='move':
                 if len(op.inputs)!=1 or len(op.outputs)!=1: raise NativeCodegenError('invalid move')
                 output=op.outputs[0]
