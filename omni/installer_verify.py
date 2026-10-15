@@ -6,6 +6,7 @@ import hashlib
 import io
 import json
 import zipfile
+import zlib
 from typing import Any
 
 
@@ -16,6 +17,15 @@ class InstallerVerificationError(ValueError):
 def verify_installer(payload: bytes) -> dict[str, Any]:
     if not isinstance(payload, bytes):
         raise TypeError("installer payload must be bytes")
+    # Validate the ZIP end-of-central-directory comment length explicitly.
+    # zipfile is permissive about a corrupted comment-length field, which can
+    # otherwise make a modified archive appear valid when its package CRCs pass.
+    eocd = payload.rfind(b"PK\x05\x06")
+    if eocd < 0 or len(payload) < eocd + 22:
+        raise InstallerVerificationError("invalid installer archive directory")
+    comment_length = int.from_bytes(payload[eocd + 20:eocd + 22], "little")
+    if eocd + 22 + comment_length != len(payload):
+        raise InstallerVerificationError("installer archive directory length mismatch")
     try:
         with zipfile.ZipFile(io.BytesIO(payload), "r") as archive:
             names = archive.namelist()
@@ -35,5 +45,5 @@ def verify_installer(payload: bytes) -> dict[str, Any]:
             if expected_size != len(package):
                 raise InstallerVerificationError("installer package size mismatch")
             return {"manifest": manifest, "package_name": package_name, "package_size": len(package)}
-    except zipfile.BadZipFile as exc:
-        raise InstallerVerificationError("invalid installer archive") from exc
+    except (zipfile.BadZipFile, OSError, EOFError, zlib.error, RuntimeError) as exc:
+        raise InstallerVerificationError("invalid or corrupted installer archive") from exc

@@ -26,7 +26,6 @@ def _terminator(block: BasicBlock) -> str | None:
 
 
 def analyze_control_flow(function: FunctionIR) -> ControlFlowGraph:
-    function.validate()
     names = tuple(block.name for block in function.blocks)
     by_name = {block.name: block for block in function.blocks}
     entry = names[0]
@@ -40,14 +39,16 @@ def analyze_control_flow(function: FunctionIR) -> ControlFlowGraph:
             if not block.successors:
                 raise ControlFlowError(f"branch block has no successors: {block.name}")
             if terminator == "branch" and len(block.successors) != 2:
-                raise ControlFlowError(f"conditional branch requires two successors: {block.name}")
+                op = block.operations[-1]
+                if len(block.successors) != 1 or "true" in op.attributes or "false" in op.attributes:
+                    raise ControlFlowError(f"conditional branch requires two successors: {block.name}")
             if terminator == "jump" and len(block.successors) != 1:
                 raise ControlFlowError(f"jump requires one successor: {block.name}")
         if terminator not in {None, "return", "ret", "branch", "cond_branch", "jump"} and block.successors:
             raise ControlFlowError(f"block {block.name} has successors without a control-flow terminator")
         if terminator == "branch":
             op = block.operations[-1]
-            if op.opcode == "branch":
+            if op.opcode == "branch" and ("true" in op.attributes or "false" in op.attributes):
                 true_target = op.attributes.get("true")
                 false_target = op.attributes.get("false")
                 if (true_target, false_target) != tuple(block.successors):
@@ -57,8 +58,11 @@ def analyze_control_flow(function: FunctionIR) -> ControlFlowGraph:
             if target != block.successors[0]:
                 raise ControlFlowError(f"jump target disagrees with successor: {block.name}")
         for successor in block.successors:
+            if successor not in predecessors:
+                raise ControlFlowError(f"unknown successor {successor!r} in {block.name!r}")
             predecessors[successor].append(block.name)
 
+    function.validate()
     seen: set[str] = set()
     stack = [entry]
     while stack:

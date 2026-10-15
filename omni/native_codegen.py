@@ -16,7 +16,7 @@ from .types import TypeKind
 _BASE = 0x400000
 _PAGE = 0x1000
 _SYSV_INTEGER_ARGUMENT_REGISTERS = (7, 6, 2, 1, 8, 9)  # rdi,rsi,rdx,rcx,r8,r9
-_ALLOCATABLE_REGISTERS = (3, 4, 5, 10, 11, 12, 13, 14, 15)
+_ALLOCATABLE_REGISTERS = (3, 5, 10, 11, 12, 13, 14, 15)
 
 
 class NativeCodegenError(ValueError):
@@ -118,11 +118,15 @@ def _compile_ops(module: ModuleIR) -> bytes:
             continue
 
         if op.opcode == "return":
-            if len(op.inputs) != 1 or op.inputs[0] not in registers:
-                raise NativeCodegenError("return requires one defined operand")
-            return_reg = registers[op.inputs[0]]
-            if return_reg != 0:
-                code += _mov_rr(0, return_reg)
+            if len(op.inputs) > 1 or (op.inputs and op.inputs[0] not in registers):
+                raise NativeCodegenError("return requires at most one defined operand")
+            if op.inputs:
+                return_reg = registers[op.inputs[0]]
+                if return_reg != 0:
+                    code += _mov_rr(0, return_reg)
+            else:
+                return_reg = 0
+                code += _mov_imm64(0, 0)
             code += _mov_rr(7, 0)  # RDI = RAX
             code += _mov_imm64(0, 60)  # RAX = SYS_exit
             code += b"\x0F\x05"  # syscall
@@ -131,7 +135,7 @@ def _compile_ops(module: ModuleIR) -> bytes:
 
         raise NativeCodegenError(f"unsupported x86-64 operation: {op.opcode}")
 
-    if not returned or return_reg is None:
+    if not returned:
         raise NativeCodegenError("function has no return")
     return bytes(code)
 

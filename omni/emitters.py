@@ -25,22 +25,13 @@ def emit_c(module: ModuleIR, target: TargetDescriptor | None = None) -> bytes:
     for function in module.functions:
         lines.extend(_emit_c_function(function))
         lines.append("")
-    entry = module.functions[0]
-    if entry.parameters:
-        raise EmitterError("C executable wrapper requires a zero-argument first function")
-    lines.extend([
-        "int main(void) {",
-        f"    printf(\"%lld\\n\", (long long){_c_name(entry.name)}());",
-        "    return 0;",
-        "}",
-    ])
     return "\n".join(lines).encode("utf-8")
 
 
 def _emit_c_function(function: FunctionIR) -> list[str]:
     if len(function.blocks) != 1:
         raise EmitterError("C reference emitter currently requires one basic block")
-    params = ", ".join(f"int64_t {_c_name(name)}" for name in function.parameters)
+    params = ", ".join(f"int64_t {_c_name(name)}" for name in function.parameters) or "void"
     lines = [f"int64_t {_c_name(function.name)}({params}) {{"]
     declared = set(function.parameters)
     for op in function.blocks[0].operations:
@@ -67,7 +58,9 @@ def _emit_c_function(function: FunctionIR) -> list[str]:
         if op.opcode == "return":
             if len(op.inputs) != 1 or op.inputs[0] not in declared:
                 raise EmitterError("return requires one defined input")
+            if function.name == "main":
+                lines.append(f'    printf("%lld\\n", (long long){_c_name(op.inputs[0])});')
             lines.append(f"    return {_c_name(op.inputs[0])};")
-            continue
+            return lines
         raise EmitterError(f"unsupported C operation: {op.opcode}")
     raise EmitterError(f"function has no return: {function.name}")

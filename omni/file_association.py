@@ -4,7 +4,7 @@ from __future__ import annotations
 from .oi_file_icon import OI_ICON_ASSET, OI_EXTENSION, OI_MIME_TYPE
 
 OMNI_SOURCE_EXTENSION = OI_EXTENSION
-OMNI_LOGO_ASSET = OI_ICON_ASSET
+OMNI_LOGO_ASSET = "assets/branding/omni-logo.jpg"
 
 
 def source_file_association():

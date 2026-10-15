@@ -22,7 +22,7 @@ def _compatible(left: TypeRef, right: TypeRef) -> bool:
         return True
     if left.kind != right.kind or left.nullable != right.nullable:
         return False
-    if left.name != right.name or len(left.parameters) != len(right.parameters):
+    if left.name != right.name or left.bits != right.bits or left.signed != right.signed or len(left.parameters) != len(right.parameters):
         return False
     if set(left.fields) != set(right.fields):
         return False
@@ -62,7 +62,7 @@ def _check_function(function: FunctionIR) -> list[TypeDiagnostic]:
                     diagnostics.append(_diag("IR002", f"use of undefined value: {name}", function, block, name))
             if len(operation.outputs) != len(set(operation.outputs)):
                 diagnostics.append(_diag("IR003", f"duplicate operation output: {operation.opcode}", function, block))
-            declared = operation.attributes.get("input_types")
+            declared = operation.input_types or operation.attributes.get("input_types")
             if declared is not None:
                 if not isinstance(declared, (list, tuple)) or len(declared) != len(operation.inputs):
                     diagnostics.append(_diag("IR004", "input_types must match operation inputs", function, block))
@@ -73,14 +73,26 @@ def _check_function(function: FunctionIR) -> list[TypeDiagnostic]:
             output_type = operation.attributes.get("output_type")
             if output_type is not None and not isinstance(output_type, TypeRef):
                 diagnostics.append(_diag("IR006", "output_type must be a TypeRef", function, block))
-            for output in operation.outputs:
+            for index, output in enumerate(operation.outputs):
+                if output in definitions and operation.opcode == "move":
+                    # move is the assignment operation for mutable locals; keep
+                    # the original definition contract and refresh its inferred
+                    # type from the assigned value when known.
+                    if len(operation.inputs) == 1 and operation.inputs[0] in definitions:
+                        source_type = definitions[operation.inputs[0]]
+                        target_type = definitions[output]
+                        if target_type.kind != TypeKind.ANY and source_type.kind != TypeKind.ANY and not _compatible(target_type, source_type):
+                            diagnostics.append(_diag("IR005", f"type mismatch for assignment: {output}", function, block, output))
+                        definitions[output] = source_type
+                    continue
                 if output in definitions:
                     diagnostics.append(_diag("IR007", f"redefinition of value: {output}", function, block, output))
-                elif isinstance(output_type, TypeRef):
-                    definitions[output] = output_type
                 else:
-                    definitions[output] = TypeRef(TypeKind.ANY)
-            if operation.opcode in {"return", "branch"}:
+                    inferred_type = output_type
+                    if inferred_type is None and operation.output_types:
+                        inferred_type = operation.output_types[index]
+                    definitions[output] = inferred_type if isinstance(inferred_type, TypeRef) else TypeRef(TypeKind.ANY)
+            if operation.opcode in {"return", "branch", "jump"}:
                 terminated = True
     return diagnostics
 

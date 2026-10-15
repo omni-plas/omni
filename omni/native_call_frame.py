@@ -6,7 +6,11 @@ from dataclasses import dataclass
 class CallFrame:
     stack_argument_bytes:int
     alignment_padding:int
-    cleanup_bytes:int
+    cleanup_bytes:int = 0
+
+    @property
+    def stack_bytes(self) -> int:
+        return self.stack_argument_bytes + self.alignment_padding
 
 def plan_call_frame(stack_argument_count:int, current_alignment:int=0)->CallFrame:
     if stack_argument_count<0: raise ValueError('negative argument count')

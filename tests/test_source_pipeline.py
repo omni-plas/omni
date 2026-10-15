@@ -17,7 +17,18 @@ class DemoFrontend:
             "entity": {"kind": "application", "name": filename},
             "source": {"language": self.language, "version": "1"},
             "target": {"platform": "future-os", "capabilities": {"semantic-artifact": True}},
-            "semantics": {"program": {"source": source}},
+            "semantics": {
+                "program": {"source": source},
+                "types": {},
+                "control_flow": {"model": "frontend-defined"},
+                "data_flow": {"model": "frontend-defined"},
+                "memory_model": {"model": "frontend-defined"},
+                "error_handling": {"model": "frontend-defined"},
+                "io": {"model": "frontend-defined"},
+                "dependencies": [],
+                "security": {"model": "frontend-defined"},
+                "performance": {"model": "frontend-defined"},
+            },
         }
 
 

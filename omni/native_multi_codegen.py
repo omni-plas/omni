@@ -7,7 +7,7 @@ from .targets import TargetDescriptor
 from .types import TypeKind
 
 _BASE=0x400000; _PAGE=0x1000
-_ARG_REGS=(7,6,2,1,8,9); _WORK_REGS=(3,4,5,10,11,12,13,14,15)
+_ARG_REGS=(7,6,2,1,8,9); _WORK_REGS=(3,5,10,11,12,13,14,15)
 _CC={"eq":4,"ne":5,"lt":12,"le":14,"gt":15,"ge":13}
 
 def _rex(w=1,r=0,b=0): return bytes([0x40|(w<<3)|(r<<2)|b])
@@ -38,17 +38,38 @@ def _compile_function(fn,known):
                 try: dst=next(free)
                 except StopIteration as e: raise NativeCodegenError('register limit exceeded') from e
                 regs[op.outputs[0]]=dst; code+=_mov_imm(dst,value)
-            elif op.opcode in {'add','sub','mul'}:
+            elif op.opcode in {'add','sub','mul','div'}:
                 if len(op.inputs)!=2 or len(op.outputs)!=1: raise NativeCodegenError('binary operation arity')
                 a,b=get(op.inputs[0]),get(op.inputs[1])
-                try: dst=next(free)
-                except StopIteration as e: raise NativeCodegenError('register limit exceeded') from e
-                code+=_mov_rr(dst,a)+_rr({'add':b'\x01','sub':b'\x29','mul':b'\x0f\xaf'}[op.opcode],dst,b); regs[op.outputs[0]]=dst
+                if op.opcode=='div':
+                    # idiv consumes RDX:RAX. Preserve any live value currently
+                    # assigned to RDX before using it as the high dividend word.
+                    rdx_names=[name for name,reg in regs.items() if reg==2 and name not in op.outputs]
+                    if rdx_names:
+                        try: saved=next(free)
+                        except StopIteration as e: raise NativeCodegenError('register limit exceeded') from e
+                        code+=_mov_rr(saved,2)
+                        for name in rdx_names: regs[name]=saved
+                        a,b=get(op.inputs[0]),get(op.inputs[1])
+                    try: dst=next(free)
+                    except StopIteration as e: raise NativeCodegenError('register limit exceeded') from e
+                    code+=_mov_rr(0,a)+b'\x48\x99'+_rex(b=(b>>3)&1)+b'\xf7'+bytes([0xf8|(b&7)])+_mov_rr(dst,0)
+                else:
+                    try: dst=next(free)
+                    except StopIteration as e: raise NativeCodegenError('register limit exceeded') from e
+                    code+=_mov_rr(dst,a)+_rr({'add':b'\x01','sub':b'\x29','mul':b'\x0f\xaf'}[op.opcode],dst,b)
+                regs[op.outputs[0]]=dst
             elif op.opcode=='move':
                 if len(op.inputs)!=1 or len(op.outputs)!=1: raise NativeCodegenError('invalid move')
-                try: dst=next(free)
-                except StopIteration as e: raise NativeCodegenError('register limit exceeded') from e
-                code+=_mov_rr(dst,get(op.inputs[0])); regs[op.outputs[0]]=dst
+                output=op.outputs[0]
+                if output in regs:
+                    # Reassignment must update the existing location so a
+                    # loop's back-edge observes the new value on each iteration.
+                    dst=regs[output]
+                else:
+                    try: dst=next(free)
+                    except StopIteration as e: raise NativeCodegenError('register limit exceeded') from e
+                code+=_mov_rr(dst,get(op.inputs[0])); regs[output]=dst
             elif op.opcode=='compare':
                 if len(op.inputs)!=2 or len(op.outputs)!=1: raise NativeCodegenError('compare arity')
                 cc=_CC.get(op.attributes.get('operator'))
@@ -56,7 +77,7 @@ def _compile_function(fn,known):
                 a,b=get(op.inputs[0]),get(op.inputs[1])
                 try: dst=next(free)
                 except StopIteration as e: raise NativeCodegenError('register limit exceeded') from e
-                code+=_rr(b'\x39',a,b)+_mov_imm(dst,0)+_jcc(cc,10)+_mov_imm(dst,1); regs[op.outputs[0]]=dst
+                code+=_rr(b'\x39',a,b)+_mov_imm(dst,0)+_jcc({4:5,5:4,12:13,13:12,14:15,15:14}[cc],10)+_mov_imm(dst,1); regs[op.outputs[0]]=dst
             elif op.opcode in {'and','or'}:
                 if len(op.inputs)!=2 or len(op.outputs)!=1: raise NativeCodegenError(f'{op.opcode} arity')
                 a,b=get(op.inputs[0]),get(op.inputs[1])
@@ -92,8 +113,9 @@ def _compile_function(fn,known):
                 if target not in known_blocks: raise NativeCodegenError('jump target not found')
                 pos=len(code); code+=_jmp(0); jump_fix.append((pos,target,5)); terminated=True
             elif op.opcode=='return':
-                if len(op.inputs)!=1: raise NativeCodegenError('invalid return')
-                code+=_mov_rr(0,get(op.inputs[0])); code+=(_mov_rr(7,0)+_mov_imm(0,60)+b'\x0f\x05') if fn.name=='main' else b'\xc3'; terminated=True; returned=True
+                if len(op.inputs)>1: raise NativeCodegenError('invalid return')
+                code+=_mov_rr(0,get(op.inputs[0])) if op.inputs else _mov_imm(0,0)
+                code+=(_mov_rr(7,0)+_mov_imm(0,60)+b'\x0f\x05') if fn.name=='main' else b'\xc3'; terminated=True; returned=True
             else: raise NativeCodegenError(f'unsupported operation: {op.opcode}')
         if not terminated and block.successors:
             if len(block.successors)!=1: raise NativeCodegenError(f'block has multiple successors without branch: {block.name}')

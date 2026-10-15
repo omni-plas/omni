@@ -26,7 +26,7 @@ def compile_omni_source(
     module_name: str = "omni_module",
     emit_native: bool = False,
 ) -> OmniCompilation:
-    module = lower_source(source, module_name=module_name)
+    module = lower_source(source, module_name=module_name, strict_calls=False)
     executable = None
     if emit_native:
         if target not in {"linux-x86_64", "linux-amd64"}:

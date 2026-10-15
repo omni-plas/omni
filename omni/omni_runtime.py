@@ -10,14 +10,18 @@ class OmniRuntimeError(RuntimeError):
 
 
 def _compare(operator: str, left: int, right: int) -> bool:
-    return {
-        "eq": left == right,
-        "ne": left != right,
-        "lt": left < right,
-        "le": left <= right,
-        "gt": left > right,
-        "ge": left >= right,
-    }.get(operator, (_ for _ in ()).throw(OmniRuntimeError(f"unsupported comparison: {operator}")))
+    comparisons = {
+        "eq": lambda: left == right,
+        "ne": lambda: left != right,
+        "lt": lambda: left < right,
+        "le": lambda: left <= right,
+        "gt": lambda: left > right,
+        "ge": lambda: left >= right,
+    }
+    try:
+        return comparisons[operator]()
+    except KeyError as exc:
+        raise OmniRuntimeError(f"unsupported comparison: {operator}") from exc
 
 
 def execute_function(module: ModuleIR, function_name: str, arguments: tuple[int, ...] = ()) -> int:

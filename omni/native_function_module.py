@@ -9,6 +9,6 @@ class CompiledFunction:
     name: str
     code: bytes
 
-def compile_functions(functions, registers=(3,4,5,10,11,12,13,14,15)):
+def compile_functions(functions, registers=(3,5,10,11,12,13,14,15)):
     compiled=tuple(CompiledFunction(fn.name,compile_function_to_native(fn,registers)) for fn in functions)
     return link_fragments(tuple(NativeFragment(x.name,x.code) for x in compiled))

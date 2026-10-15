@@ -15,7 +15,7 @@ class AllocatedNativeFunction:
     values: tuple[AllocatedNativeValue, ...]
     stack_size: int
 
-def allocate_function(fn, registers=(3,4,5,10,11,12,13,14,15)) -> AllocatedNativeFunction:
+def allocate_function(fn, registers=(3,5,10,11,12,13,14,15)) -> AllocatedNativeFunction:
     plan = plan_native_allocation(fn, tuple(registers))
     values = tuple([AllocatedNativeValue(n, ValueLocation(register=r)) for n,r in sorted(plan.registers.items())] + [AllocatedNativeValue(n, ValueLocation(stack_offset=o)) for n,o in sorted(plan.spills.items())])
     return AllocatedNativeFunction(fn.name, values, plan.stack_size)

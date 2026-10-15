@@ -75,3 +75,11 @@ def test_native_while_loop_from_oi_source_runs(tmp_path):
     path = write_native_executable(tmp_path / "loop", compile_native_executable(result.ir))
     completed = subprocess.run([str(path)], check=False)
     assert completed.returncode == 0
+
+
+def test_native_integer_division_runs(tmp_path):
+    result = compile_source("fn main() { return 84 / 2; }", origin="divide.oi")
+    assert result.ok and result.ir is not None
+    path = write_native_executable(tmp_path / "divide", compile_native_executable(result.ir))
+    completed = subprocess.run([str(path)], check=False)
+    assert completed.returncode == 42

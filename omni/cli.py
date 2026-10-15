@@ -102,7 +102,7 @@ def _installation_json(args: argparse.Namespace) -> str:
     plan = plan_installation(target, kind=InstallerKind(args.kind), artifact_format=args.artifact_format, bootable=args.bootable, filesystem=args.filesystem, artifacts=tuple(args.artifact), metadata=_metadata(args.metadata))
     if args.manifest:
         return plan.render_manifest()
-    return json.dumps({"identity": plan.identity(), "target": plan.target.identity(), "kind": plan.kind.value, "artifact_format": plan.artifact_format, "bootable": plan.bootable, "filesystem": plan.filesystem, "artifacts": list(plan.artifacts), "metadata": dict(plan.metadata)}, ensure_ascii=False, sort_keys=True)
+    return json.dumps({"identity": plan.identity(), "target": "/".join(part for part in (plan.target.platform, plan.target.architecture, plan.target.abi) if part), "kind": plan.kind.value, "artifact_format": plan.artifact_format, "bootable": plan.bootable, "filesystem": plan.filesystem, "artifacts": list(plan.artifacts), "metadata": dict(plan.metadata)}, ensure_ascii=False, sort_keys=True)
 
 
 def _validate_native(path: Path) -> int:
@@ -115,7 +115,27 @@ def _compile_source_for_native(path: Path):
     if is_omni_source_path(path):
         result = compile_source(path.read_text(encoding="utf-8"), origin=path)
     else:
-        result = compile_semantics(_load(path))
+        document = _load(path)
+        # The native-exec command accepts compact UIR function documents as a
+        # convenience import format. Normalize omitted exchange metadata here;
+        # the canonical UIR validator itself remains strict.
+        document.setdefault("version", "1")
+        document.setdefault("source", {"language": "omni"})
+        document.setdefault("target", {
+            "platform": "linux",
+            "architecture": "x86_64",
+            "abi": "sysv",
+            "capabilities": {"native-executable": True},
+        })
+        semantics = document.setdefault("semantics", {})
+        if isinstance(semantics, dict):
+            for key, default in (
+                ("types", {}), ("control_flow", {}), ("data_flow", {}),
+                ("memory_model", {}), ("error_handling", {}), ("io", {}),
+                ("dependencies", []), ("security", {}), ("performance", {}),
+            ):
+                semantics.setdefault(key, default)
+        result = compile_semantics(document)
     if not result.ok or result.ir is None:
         raise OmniError(format_diagnostics(result.diagnostics))
     return result.ir

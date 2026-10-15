@@ -10,9 +10,9 @@ class ExecutableImage:
     entry_offset: int
     symbols: dict[str, int]
 
-def build_linked_executable(fragments, entry_symbol=None) -> bytes:
-    image=link_module(fragments, entry_symbol)
-    return image.data
+def build_linked_executable(fragments, entry_symbol=None) -> ExecutableImage:
+    """Link fragments and retain executable metadata alongside the ELF bytes."""
+    return link_module(fragments, entry_symbol)
 
 def link_module(fragments, entry_symbol=None) -> ExecutableImage:
     module=link_fragments(tuple(fragments))
@@ -23,4 +23,4 @@ def link_module(fragments, entry_symbol=None) -> ExecutableImage:
     return ExecutableImage(data, entry, dict(module.symbols))
 
 def build_single_function_executable(name, code):
-    return build_linked_executable((NativeFragment(name, bytes(code)),), name)
+    return build_linked_executable((NativeFragment(name, bytes(code)),), name).data

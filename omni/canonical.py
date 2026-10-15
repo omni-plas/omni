@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from enum import Enum
 from typing import Any
 
 from .ir import ModuleIR
@@ -10,6 +11,10 @@ from .ir import ModuleIR
 
 def canonicalize(value: Any) -> Any:
     """Return JSON-compatible deterministic data for supported IR values."""
+    if isinstance(value, Enum):
+        return canonicalize(value.value)
+    if isinstance(value, type) and issubclass(value, Enum):
+        return f"{value.__module__}.{value.__qualname__}"
     if hasattr(value, "to_dict") and callable(value.to_dict):
         return canonicalize(value.to_dict())
     if isinstance(value, dict):

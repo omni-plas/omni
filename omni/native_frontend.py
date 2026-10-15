@@ -41,7 +41,7 @@ class OmniNativeFrontend:
         }
 
     def _parse_program(self, source: str, *, filename: str) -> UIR:
-        module = lower_source(source, module_name=filename)
+        module = lower_source(source, module_name=filename, strict_calls=False)
         functions: list[dict[str, Any]] = []
         for function in module.functions:
             blocks = [
@@ -55,9 +55,9 @@ class OmniNativeFrontend:
             functions.append(
                 {
                     "name": function.name,
-                    "parameters": {name: value.signature() for name, value in function.parameters.items()},
-                    "result": function.result.signature(),
-                    "operations": [self._operation_document(op) for block in function.blocks for op in block.operations],
+                    "parameters": {name: value.kind.value for name, value in function.parameters.items()},
+                    "result": function.result.kind.value,
+                    "operations": ([self._operation_document(op) for block in function.blocks for op in block.operations] if len(blocks) == 1 else []),
                     "control_flow": {"blocks": blocks},
                 }
             )
@@ -132,6 +132,17 @@ class OmniNativeFrontend:
                 "abi": values["abi"],
                 "capabilities": {},
             },
-            "semantics": {"program": {"entry": values.get("entry", "main")}},
+            "semantics": {
+                "program": {"entry": values.get("entry", "main")},
+                "types": {},
+                "control_flow": {},
+                "data_flow": {},
+                "memory_model": {},
+                "error_handling": {},
+                "io": {},
+                "dependencies": [],
+                "security": {},
+                "performance": {},
+            },
         }
         return validate_uir(document)

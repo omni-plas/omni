@@ -25,7 +25,7 @@ class LinkedFunctionModule:
     code: bytes
     symbols: dict[str, int]
 
-def prepare_module(module, registers=(3, 4, 5, 10, 11, 12, 13, 14, 15)) -> NativePreparedModule:
+def prepare_module(module, registers=(3, 5, 10, 11, 12, 13, 14, 15)) -> NativePreparedModule:
     module.validate()
     validate_emission_pipeline()
     return NativePreparedModule(tuple(prepare_native_function(fn, registers) for fn in module.functions))

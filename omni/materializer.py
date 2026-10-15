@@ -57,7 +57,7 @@ class MaterializationPlan:
         return {
             "schema": "omni.materialization.v1",
             "target": self.target.identity(),
-            "target_descriptor": self.target.serialize(),
+            "target_descriptor": self.target.document(),
             "artifacts": entries,
             "metadata": dict(self.metadata),
         }
