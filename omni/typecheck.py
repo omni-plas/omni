@@ -74,6 +74,17 @@ def _check_function(function: FunctionIR) -> list[TypeDiagnostic]:
             if output_type is not None and not isinstance(output_type, TypeRef):
                 diagnostics.append(_diag("IR006", "output_type must be a TypeRef", function, block))
             for index, output in enumerate(operation.outputs):
+                if output in definitions and operation.opcode == "move":
+                    # move is the assignment operation for mutable locals; keep
+                    # the original definition contract and refresh its inferred
+                    # type from the assigned value when known.
+                    if len(operation.inputs) == 1 and operation.inputs[0] in definitions:
+                        source_type = definitions[operation.inputs[0]]
+                        target_type = definitions[output]
+                        if target_type.kind != TypeKind.ANY and source_type.kind != TypeKind.ANY and not _compatible(target_type, source_type):
+                            diagnostics.append(_diag("IR005", f"type mismatch for assignment: {output}", function, block, output))
+                        definitions[output] = source_type
+                    continue
                 if output in definitions:
                     diagnostics.append(_diag("IR007", f"redefinition of value: {output}", function, block, output))
                 else:
@@ -81,7 +92,7 @@ def _check_function(function: FunctionIR) -> list[TypeDiagnostic]:
                     if inferred_type is None and operation.output_types:
                         inferred_type = operation.output_types[index]
                     definitions[output] = inferred_type if isinstance(inferred_type, TypeRef) else TypeRef(TypeKind.ANY)
-            if operation.opcode in {"return", "branch"}:
+            if operation.opcode in {"return", "branch", "jump"}:
                 terminated = True
     return diagnostics
 
