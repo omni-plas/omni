@@ -100,3 +100,22 @@ def test_registry_reports_definition_without_executable_frontend():
     )
     with pytest.raises(RegistryError, match="definition but no executable frontend"):
         registry.frontend_for_extension("fl")
+
+
+def test_registry_discovers_frontend_from_source_path(tmp_path):
+    registry = CompilerRegistry()
+    frontend = DummyFrontend()
+    registry.register_language_definition(
+        LanguageDefinition(name="FutureLang", version="1", source_extensions=("fl",))
+    )
+    registry.register_frontend("FutureLang", frontend)
+
+    source = tmp_path / "module.FL"
+    source.write_text("future source", encoding="utf-8")
+    assert registry.frontend_for_path(source) is frontend
+
+
+def test_registry_rejects_source_path_without_extension(tmp_path):
+    registry = CompilerRegistry()
+    with pytest.raises(RegistryError, match="has no extension"):
+        registry.frontend_for_path(tmp_path / "module")
