@@ -55,8 +55,8 @@ class OmniNativeFrontend:
             functions.append(
                 {
                     "name": function.name,
-                    "parameters": {name: value.signature() for name, value in function.parameters.items()},
-                    "result": function.result.signature(),
+                    "parameters": {name: value.kind.value for name, value in function.parameters.items()},
+                    "result": function.result.kind.value,
                     "operations": ([self._operation_document(op) for block in function.blocks for op in block.operations] if len(blocks) == 1 else []),
                     "control_flow": {"blocks": blocks},
                 }
