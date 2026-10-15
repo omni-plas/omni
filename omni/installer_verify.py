@@ -36,5 +36,5 @@ def verify_installer(payload: bytes) -> dict[str, Any]:
             if expected_size != len(package):
                 raise InstallerVerificationError("installer package size mismatch")
             return {"manifest": manifest, "package_name": package_name, "package_size": len(package)}
-    except zipfile.BadZipFile as exc:
-        raise InstallerVerificationError("invalid installer archive") from exc
+    except (zipfile.BadZipFile, OSError, EOFError, zlib.error, RuntimeError) as exc:
+        raise InstallerVerificationError("invalid or corrupted installer archive") from exc
