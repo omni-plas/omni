@@ -47,7 +47,7 @@ class InstallFormat:
             "identity": self.identity(),
             "name": self.name.strip(),
             "version": self.version.strip(),
-            "target": self.target.serialize(),
+            "target": self.target.document(),
             "bootable": self.bootable,
             "filesystem": self.filesystem.strip() if self.filesystem else None,
             "metadata": dict(self.metadata),
