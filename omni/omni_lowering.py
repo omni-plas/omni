@@ -36,10 +36,7 @@ def _expr(node,env,operations,counter,signatures):
             expected,result_type=signature
             if len(node.arguments)!=expected: raise OmniLoweringError(f"function {node.callee} expects {expected} arguments, got {len(node.arguments)}")
         else:
-            # Preserve unresolved calls as explicit symbols in IR. Runtime
-            # dispatch can report a missing callee, while native linking rejects
-            # it when an executable is materialized.
-            result_type=_INT
+            raise OmniLoweringError(f"undefined function: {node.callee}")
         name=f"%v{counter[0]}"; counter[0]+=1; operations.append(Operation("call",inputs=tuple(args),outputs=(name,),attributes={"callee":node.callee,"type":result_type.signature()})); env[name]=result_type; return name,result_type
     raise OmniLoweringError(f"unsupported expression node: {type(node).__name__}")
 def _function(function,signatures):
