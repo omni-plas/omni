@@ -21,6 +21,11 @@ class SourceCompilationResult:
     frontend_language: str
     compilation: CompilationResult
 
+    @property
+    def ok(self) -> bool:
+        """Whether source compilation produced a backend artifact."""
+        return self.compilation is not None and self.compilation.artifact is not None
+
 
 def compile_source(
     source: str,
