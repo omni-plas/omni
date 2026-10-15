@@ -19,7 +19,7 @@ class PreparedNativeFunction:
         """Expose allocated value locations without leaking allocator internals."""
         return self.allocation.values
 
-def prepare_native_function(fn, registers=(3,4,5,10,11,12,13,14,15)) -> PreparedNativeFunction:
+def prepare_native_function(fn, registers=(3,5,10,11,12,13,14,15)) -> PreparedNativeFunction:
     allocation = allocate_function(fn, registers)
     spills = {v.name: v.location.stack_offset for v in allocation.values if v.location.stack_offset is not None}
     frame = build_function_frame(spills, allocation.stack_size)
