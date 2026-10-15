@@ -1,4 +1,4 @@
-"""Semantic IR validation beyond structural dataclass checks."""
+""""Semantic IR validation beyond structural dataclass checks."""
 
 from __future__ import annotations
 
@@ -9,17 +9,17 @@ class SemanticValidationError(ValueError):
     """Raised when executable semantic IR violates its data-flow contract."""
 
 
-# This is the executable subset understood by the deterministic reference
-# runtime. Keep this contract aligned with runtime._execute_operation.
+# Keep this set aligned with the operations implemented by runtime.py.
 SUPPORTED_REFERENCE_OPCODES = frozenset({
     "const", "move", "add", "sub", "mul", "div", "compare",
     "cmp_eq", "cmp_lt", "cmp_ge", "cmp_le", "cmp_gt", "cmp_ne",
     "and", "or", "not", "branch", "jump", "call", "return",
+    "alloc", "load", "store", "ptr_add", "free",
 })
 _TERMINATORS = frozenset({"branch", "jump", "return"})
 _BINARY_OPS = frozenset({
     "add", "sub", "mul", "div", "compare", "cmp_eq", "cmp_lt",
-    "cmp_ge", "cmp_le", "cmp_gt", "cmp_ne", "and", "or",
+    "cmp_ge", "cmp_le", "cmp_gt", "cmp_ne", "and", "or", "ptr_add",
 })
 
 
@@ -36,8 +36,8 @@ def validate_function(function: FunctionIR) -> None:
             if block_terminated:
                 raise SemanticValidationError("operations are not allowed after a terminator")
 
-            # Check opcode shape before mutating the definition set so malformed
-            # operations report their actual contract violation first.
+            # Check operation shape before defining outputs so malformed IR gets
+            # the most relevant diagnostic instead of a secondary redefinition.
             if opcode == "const":
                 if len(operation.outputs) != 1 or operation.inputs or "value" not in operation.attributes:
                     raise SemanticValidationError("const requires one output, no inputs, and a value")
@@ -47,15 +47,23 @@ def validate_function(function: FunctionIR) -> None:
             elif opcode in _BINARY_OPS:
                 if len(operation.inputs) != 2 or len(operation.outputs) != 1:
                     raise SemanticValidationError(f"{opcode} requires two inputs and one output")
-                if opcode == "compare" and operation.attributes.get("operator") not in {
-                    "eq", "ne", "lt", "le", "gt", "ge"
-                }:
+                if opcode == "compare" and operation.attributes.get("operator") not in {"eq", "ne", "lt", "le", "gt", "ge"}:
                     raise SemanticValidationError("compare requires a supported operator")
             elif opcode == "not":
                 if len(operation.inputs) != 1 or len(operation.outputs) != 1:
                     raise SemanticValidationError("not requires one input and one output")
+            elif opcode in {"alloc", "load"}:
+                if len(operation.inputs) != 1 or len(operation.outputs) != 1:
+                    raise SemanticValidationError(f"{opcode} requires one input and one output")
+            elif opcode == "store":
+                if len(operation.inputs) != 2 or operation.outputs:
+                    raise SemanticValidationError("store requires two inputs and no outputs")
+            elif opcode == "free":
+                if len(operation.inputs) != 1 or operation.outputs:
+                    raise SemanticValidationError("free requires one input and no outputs")
             elif opcode == "call":
-                if not isinstance(operation.attributes.get("callee"), str) or not operation.attributes["callee"].strip():
+                callee = operation.attributes.get("callee")
+                if not isinstance(callee, str) or not callee.strip():
                     raise SemanticValidationError("call requires a non-empty callee")
                 if len(operation.outputs) > 1:
                     raise SemanticValidationError("call accepts at most one output")
@@ -67,10 +75,7 @@ def validate_function(function: FunctionIR) -> None:
                     raise SemanticValidationError("branch requires one condition input and no outputs")
                 if set(operation.attributes) != {"true", "false"}:
                     raise SemanticValidationError("branch requires true and false targets")
-                if not all(
-                    isinstance(operation.attributes[key], str) and operation.attributes[key].strip()
-                    for key in ("true", "false")
-                ):
+                if not all(isinstance(operation.attributes[key], str) and operation.attributes[key].strip() for key in ("true", "false")):
                     raise SemanticValidationError("branch targets must be non-empty strings")
             elif opcode == "jump":
                 target = operation.attributes.get("target")
@@ -81,9 +86,8 @@ def validate_function(function: FunctionIR) -> None:
                 if name not in defined:
                     raise SemanticValidationError(f"operation uses undefined value: {name}")
             for name in operation.outputs:
-                # 'move' is the reference runtime's assignment operation, so it
-                # may update an existing mutable local. Other operations define
-                # new values and must not silently overwrite prior definitions.
+                # move is assignment to a mutable local; other operations must
+                # introduce a new value and cannot silently overwrite one.
                 if name in defined and opcode != "move":
                     raise SemanticValidationError(f"operation redefines value: {name}")
                 defined.add(name)
@@ -106,13 +110,11 @@ def validate_function(function: FunctionIR) -> None:
             return_seen = True
 
     if not return_seen:
-        raise SemanticValidationError(f"function has no return: {function.name}")
+        raise SemanticValidationError(f"function without return: {function.name}")
 
 
 def validate_module(module: ModuleIR) -> None:
     """Validate executable semantics before structural CFG checks for precise diagnostics."""
-    # Semantic validation first gives branch-target mismatches a useful,
-    # deterministic error even when a mismatched target is not a declared block.
     for function in module.functions:
         validate_function(function)
     module.validate()
