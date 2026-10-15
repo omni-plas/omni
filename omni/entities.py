@@ -35,7 +35,7 @@ class EntitySpec:
                 if not isinstance(port, Mapping):
                     raise ValueError(f"entity {label} must contain objects")
                 if not isinstance(port.get("name"), str) or not port["name"].strip():
-                    raise ValueError(f"entity {label} require a non-empty name")
+                    raise ValueError(f"entity {label} ports require a non-empty name")
 
     def to_dict(self) -> dict[str, Any]:
         self.validate()
