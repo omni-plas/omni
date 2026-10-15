@@ -26,7 +26,6 @@ def _terminator(block: BasicBlock) -> str | None:
 
 
 def analyze_control_flow(function: FunctionIR) -> ControlFlowGraph:
-    function.validate()
     names = tuple(block.name for block in function.blocks)
     by_name = {block.name: block for block in function.blocks}
     entry = names[0]
@@ -57,8 +56,11 @@ def analyze_control_flow(function: FunctionIR) -> ControlFlowGraph:
             if target != block.successors[0]:
                 raise ControlFlowError(f"jump target disagrees with successor: {block.name}")
         for successor in block.successors:
+            if successor not in predecessors:
+                raise ControlFlowError(f"unknown successor {successor!r} in {block.name!r}")
             predecessors[successor].append(block.name)
 
+    function.validate()
     seen: set[str] = set()
     stack = [entry]
     while stack:
