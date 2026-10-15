@@ -32,7 +32,14 @@ class If: condition:object; then_body:tuple[object,...]; else_body:tuple[object,
 @dataclass(frozen=True)
 class While: condition:object; body:tuple[object,...]
 @dataclass(frozen=True)
-class Function: name:str; parameters:tuple[str,...]; body:tuple[object,...]
+class Function:
+    name: str
+    parameters: tuple[str, ...]
+    body: tuple[object, ...]
+
+    @property
+    def params(self) -> tuple[str, ...]:
+        return self.parameters
 @dataclass(frozen=True)
 class Program:
     functions: tuple[Function, ...]
