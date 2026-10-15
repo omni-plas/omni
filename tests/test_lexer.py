@@ -30,7 +30,7 @@ def test_token_rejects_invalid_span():
 
 
 def test_lexer_handles_escaped_quotes():
-    tokens = tokenize(r'"a\\"b"')
+    tokens = tokenize(r'"a\"b"')
     assert len(tokens) == 1
     assert tokens[0].kind == "string"
 
