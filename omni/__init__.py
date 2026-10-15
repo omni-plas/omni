@@ -40,3 +40,20 @@ from .uir import UIR, UIRValidationError, validate_uir
 __all__ = [
     "Allocation", "Artifact", "ArtifactManifest", "Backend", "BackendError", "BackendRegistry", "BackendSelection", "BasicBlock", "Binary", "Call", "CompilerRegistry", "ControlFlowError", "EncodedMemoryOp", "Frontend", "Function", "FunctionIR", "FrontendRegistry", "GenericArtifactBackend", "LanguageDefinition", "LanguageDefinitionError", "LanguagePackError", "Let", "Literal", "LiveInterval", "Memory", "MemoryIROperationError", "MemoryModelError", "MemoryObject", "MemoryPipelineError", "IRModule", "ModuleIR", "Name", "NativeArtifactBackend", "NativeCodegenError", "NativeExecutable", "NativeMemoryCodegenError", "NativeSpillError", "OIFileIconPolicy", "OIRegistration", "OI_EXTENSION", "OI_ICON_ASSET", "OI_ICON_COLOR_MODE", "OI_MIME_TYPE", "OmniLoweringError", "OmniNativeFrontend", "OmniSourceFileError", "OmniSyntaxError", "Operation", "Parser", "Program", "RegisterAllocationError", "RegistryError", "ResolvedSource", "Return", "RuntimeErrorBase", "SourceUnit", "SpillAction", "SpillPlan", "StackFrame", "StackModelError", "StackSlot", "TargetBackend", "TargetDescriptor", "TargetError", "TargetPackError", "Token", "TokenKind", "TypeKind", "TypeRef", "UIR", "UIRValidationError", "UniversalCompilationResult", "UniversalPipelineError", "Value", "add_imm64", "add_rr", "allocate", "analyze_control_flow", "alloc", "compile_source", "compile_universal", "compute_intervals", "definition_from_mapping", "default_compiler_registry", "discover_compiler_registry", "dump_language_pack", "dump_target_pack", "BACKEND_GROUP", "FRONTEND_GROUP", "LANGUAGE_GROUP", "PluginDiscoveryReport", "discover_default_plugins", "discover_plugins", "emit_multi_x86_64_elf", "emit_x86_64_elf", "encode_memory_operation", "execute", "execute_module", "free", "is_omni_source_path", "layout_stack_slots", "load", "load_language_pack", "load_oi_source", "load_target_pack", "lower_program", "lower_source", "mov_imm64", "mov_mem64", "mov_rr", "native_registration_for_current_os", "oi_file_icon_policy", "parse_omni_source", "plan_spills", "ptr_add", "read_artifact", "read_artifact_file", "register_language_pack", "registration_for", "render_registration_manifest", "require_omni_source_path", "resolve_source", "source_file_association", "stack_offset_from_rbp", "store", "store_mem64", "target_from_mapping", "tokenize_omni_source", "write_artifact",
 ]
+
+
+# Stable high-level APIs and system-construction models.
+from .errors import OmniError, ValidationError
+from .installer import InstallerKind, plan_installation
+from .lower import lower_to_ir
+from .optimize import optimize_module
+from .os_model import OperatingSystemSpec
+from .packaging import PackageManifest
+from .pipeline import compile_semantics
+from .targets import resolve_target
+
+__all__.extend([
+    "InstallerKind", "OmniError", "OperatingSystemSpec", "PackageManifest",
+    "ValidationError", "compile_semantics", "lower_to_ir", "optimize_module",
+    "plan_installation", "resolve_target",
+])
