@@ -98,3 +98,25 @@ class TargetDescriptor:
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
             raise TargetError(f"invalid target JSON: {exc}") from exc
         return cls.from_document(document)
+
+
+
+def resolve_target(value) -> TargetDescriptor:
+    """Resolve a target descriptor from a descriptor, target document, or UIR mapping."""
+    if isinstance(value, TargetDescriptor):
+        return value
+    if not isinstance(value, Mapping):
+        raise TypeError("target input must be a TargetDescriptor or mapping")
+    document = value.get("target", value)
+    if not isinstance(document, Mapping):
+        raise TargetError("target must be an object")
+    if document.get("schema") == "omni.target.v1":
+        return TargetDescriptor.from_document(document)
+    if "platform" not in document:
+        raise TargetError("target.platform is required")
+    return TargetDescriptor(
+        platform=document["platform"],
+        architecture=document.get("architecture"),
+        abi=document.get("abi"),
+        capabilities=document.get("capabilities", {}),
+    )
