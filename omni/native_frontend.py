@@ -132,6 +132,17 @@ class OmniNativeFrontend:
                 "abi": values["abi"],
                 "capabilities": {},
             },
-            "semantics": {"program": {"entry": values.get("entry", "main")}},
+            "semantics": {
+                "program": {"entry": values.get("entry", "main")},
+                "types": {},
+                "control_flow": {},
+                "data_flow": {},
+                "memory_model": {},
+                "error_handling": {},
+                "io": {},
+                "dependencies": [],
+                "security": {},
+                "performance": {},
+            },
         }
         return validate_uir(document)
