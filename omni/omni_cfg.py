@@ -1,7 +1,7 @@
 """Build a validated CFG for structured Omni statements."""
 from __future__ import annotations
 from dataclasses import dataclass
-from .omni_statements import If
+from .omni_statements import If, Return
 from .omni_loop import While
 
 @dataclass(frozen=True)
@@ -26,12 +26,13 @@ def build_cfg(statements):
                     name=fresh(); blocks.append(CFGBlock(name,tuple(current),()))
                     current=[]
                 then_name=fresh('then'); else_name=fresh('else'); join_name=fresh('join')
-                blocks.append(CFGBlock(f'cond{counter[0]}',(stmt,), (then_name,else_name)))
+                cond_name=fresh('cond')
+                blocks.append(CFGBlock(cond_name,(stmt,), (then_name,else_name)))
                 then_blocks=sequence(stmt.then_body,join_name)
                 else_blocks=sequence(stmt.else_body,join_name)
-                if then_blocks and then_blocks[-1].successors==():
+                if then_blocks and then_blocks[-1].successors==() and (not then_blocks[-1].statements or not isinstance(then_blocks[-1].statements[-1], Return)):
                     last=then_blocks[-1]; blocks[blocks.index(last)]=CFGBlock(last.name,last.statements,(join_name,))
-                if else_blocks and else_blocks[-1].successors==():
+                if else_blocks and else_blocks[-1].successors==() and (not else_blocks[-1].statements or not isinstance(else_blocks[-1].statements[-1], Return)):
                     last=else_blocks[-1]; blocks[blocks.index(last)]=CFGBlock(last.name,last.statements,(join_name,))
                 blocks.append(CFGBlock(join_name,(),()))
             elif isinstance(stmt,While):
@@ -47,7 +48,7 @@ def build_cfg(statements):
             else:
                 current.append(stmt)
         if current:
-            name=fresh(); successors=() if fallthrough is None else (fallthrough,)
+            name=fresh(); successors=() if fallthrough is None or isinstance(current[-1], Return) else (fallthrough,)
             block=CFGBlock(name,tuple(current),successors); blocks.append(block); return (block,)
         return tuple(b for b in blocks if b.name.startswith(('then','else','while_body')))
 
