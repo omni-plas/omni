@@ -53,7 +53,7 @@ class SelfBuildResult:
     @property
     def complete(self) -> bool:
         required = tuple(SelfBuildStage)
-        return self_hosted and all(stage in self.stages for stage in required)
+        return self.self_hosted and all(stage in self.stages for stage in required)
 
 
 def source_digest(source: bytes) -> str:
