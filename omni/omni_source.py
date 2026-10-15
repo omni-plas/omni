@@ -34,7 +34,14 @@ class While: condition:object; body:tuple[object,...]
 @dataclass(frozen=True)
 class Function: name:str; parameters:tuple[str,...]; body:tuple[object,...]
 @dataclass(frozen=True)
-class Program: functions:tuple[Function,...]
+class Program:
+    functions: tuple[Function, ...]
+
+    def __iter__(self):
+        return iter(self.functions)
+
+    def __len__(self):
+        return len(self.functions)
 _KEYWORDS={"fn":TokenKind.FN,"let":TokenKind.LET,"return":TokenKind.RETURN,"true":TokenKind.TRUE,"false":TokenKind.FALSE,"if":TokenKind.IF,"else":TokenKind.ELSE,"while":TokenKind.WHILE}
 
 def tokenize(source:str)->tuple[Token,...]:
