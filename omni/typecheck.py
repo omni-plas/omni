@@ -22,7 +22,7 @@ def _compatible(left: TypeRef, right: TypeRef) -> bool:
         return True
     if left.kind != right.kind or left.nullable != right.nullable:
         return False
-    if left.name != right.name or len(left.parameters) != len(right.parameters):
+    if left.name != right.name or left.bits != right.bits or left.signed != right.signed or len(left.parameters) != len(right.parameters):
         return False
     if set(left.fields) != set(right.fields):
         return False
