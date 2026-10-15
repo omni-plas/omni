@@ -92,8 +92,9 @@ def _compile_function(fn,known):
                 if target not in known_blocks: raise NativeCodegenError('jump target not found')
                 pos=len(code); code+=_jmp(0); jump_fix.append((pos,target,5)); terminated=True
             elif op.opcode=='return':
-                if len(op.inputs)!=1: raise NativeCodegenError('invalid return')
-                code+=_mov_rr(0,get(op.inputs[0])); code+=(_mov_rr(7,0)+_mov_imm(0,60)+b'\x0f\x05') if fn.name=='main' else b'\xc3'; terminated=True; returned=True
+                if len(op.inputs)>1: raise NativeCodegenError('invalid return')
+                code+=_mov_rr(0,get(op.inputs[0])) if op.inputs else _mov_imm(0,0)
+                code+=(_mov_rr(7,0)+_mov_imm(0,60)+b'\x0f\x05') if fn.name=='main' else b'\xc3'; terminated=True; returned=True
             else: raise NativeCodegenError(f'unsupported operation: {op.opcode}')
         if not terminated and block.successors:
             if len(block.successors)!=1: raise NativeCodegenError(f'block has multiple successors without branch: {block.name}')
