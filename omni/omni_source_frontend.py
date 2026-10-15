@@ -5,6 +5,7 @@ parser that leaves statements as strings.
 """
 from __future__ import annotations
 
+from .omni_source import Function as OmniFunction
 from .omni_source import parse as parse_source
 
 parse = parse_source
