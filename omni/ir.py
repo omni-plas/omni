@@ -20,6 +20,8 @@ class Operation:
     inputs: tuple[str, ...] = ()
     outputs: tuple[str, ...] = ()
     attributes: Mapping[str, Any] = field(default_factory=dict)
+    input_types: tuple[TypeRef, ...] = ()
+    output_types: tuple[TypeRef, ...] = ()
 
     def validate(self) -> None:
         if not isinstance(self.opcode, str) or not self.opcode.strip():
@@ -29,6 +31,12 @@ class Operation:
                 raise ValueError(f"operation {label} names must be non-empty")
         if len(self.outputs) != len(set(self.outputs)):
             raise ValueError(f"duplicate operation output: {self.opcode}")
+        if self.input_types and len(self.input_types) != len(self.inputs):
+            raise ValueError(f"operation input types must match inputs: {self.opcode}")
+        if self.output_types and len(self.output_types) != len(self.outputs):
+            raise ValueError(f"operation output types must match outputs: {self.opcode}")
+        for value_type in (*self.input_types, *self.output_types):
+            value_type.validate()
 
 
 @dataclass(frozen=True)
