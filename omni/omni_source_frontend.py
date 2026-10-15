@@ -10,7 +10,7 @@ class OmniFunction:
     body: tuple[str, ...]
 
 _FUNC = re.compile(r"^fn\s+([A-Za-z_]\w*)\s*\(([^)]*)\)\s*\{$")
-_INLINE_EMPTY_OR_SIMPLE = re.compile(r"^(fn\\s+[A-Za-z_]\\w*\\s*\\([^)]*\\))\\s*\\{([^{}]*)\\}\\s*$")
+_INLINE_EMPTY_OR_SIMPLE = re.compile(r"^(fn\s+[A-Za-z_]\w*\s*\([^)]*\))\s*\{([^{}]*)\}\s*$")
 
 def parse_source(source: str) -> tuple[OmniFunction, ...]:
     # Accept compact one-line function declarations as well as the canonical
