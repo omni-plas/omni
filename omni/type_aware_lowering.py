@@ -8,11 +8,7 @@ SUPPORTED_INTEGER_BITS = {1, 8, 16, 32, 64}
 
 
 def validate_native_type(typ: Type) -> bool:
-    """Return whether a type occupies a native value location.
-
-    Primitive types are identified by canonical names such as i64 and void,
-    not by a kind attribute.
-    """
+    """Return whether a supported integer type occupies a native value location."""
     name = getattr(typ, "name", None)
     if name == "void":
         return False
@@ -22,9 +18,8 @@ def validate_native_type(typ: Type) -> bool:
         width = int(name[1:])
         if bits is not None and bits != width:
             raise ValueError(f"inconsistent integer type width: {name} has bits={bits}")
-        bits = width
-
-    if bits is not None and bits in SUPPORTED_INTEGER_BITS and getattr(typ, "signed", None) in (True, False, None):
-        return True
+        if width in SUPPORTED_INTEGER_BITS:
+            return True
+        raise ValueError(f"unsupported integer width: {width}")
 
     raise ValueError(f"unsupported native type: {typ}")
