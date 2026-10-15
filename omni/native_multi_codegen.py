@@ -7,7 +7,7 @@ from .targets import TargetDescriptor
 from .types import TypeKind
 
 _BASE=0x400000; _PAGE=0x1000
-_ARG_REGS=(7,6,2,1,8,9); _WORK_REGS=(3,4,5,10,11,12,13,14,15)
+_ARG_REGS=(7,6,2,1,8,9); _WORK_REGS=(3,5,10,11,12,13,14,15)
 _CC={"eq":4,"ne":5,"lt":12,"le":14,"gt":15,"ge":13}
 
 def _rex(w=1,r=0,b=0): return bytes([0x40|(w<<3)|(r<<2)|b])
