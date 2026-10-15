@@ -19,8 +19,9 @@ def plan_construction(spec: DigitalSpec | Mapping[str, Any]) -> ConstructionPlan
     if not isinstance(spec, DigitalSpec):
         spec = DigitalSpec(
             kind=str(spec.get("kind", "")), name=str(spec.get("name", "")),
-            behavior=spec.get("behavior", {}), interfaces=tuple(spec.get("interfaces", ())),
-            data=spec.get("data", {}), requirements=spec.get("requirements", {}),
+            behavior=spec.get("behavior", {}), structure=spec.get("structure", {}),
+            interfaces=tuple(spec.get("interfaces", ())), data=spec.get("data", {}),
+            requirements=spec.get("requirements", {}), constraints=spec.get("constraints", {}),
             extensions=spec.get("extensions", {}),
         )
     creation = plan_creation(spec)
