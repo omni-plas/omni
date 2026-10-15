@@ -11,7 +11,6 @@ def test_native_backend_rejects_missing_main():
 
 
 def test_native_backend_rejects_unknown_native_call():
-    module = lower_source("fn main() { return missing(1); }")
-    # Semantic lowering normally catches this before native codegen.
-    with pytest.raises(Exception):
-        emit_multi_x86_64_elf(module)
+    # The semantic frontend rejects an unresolved call before native emission.
+    with pytest.raises(Exception, match="undefined function"):
+        lower_source("fn main() { return missing(1); }")
