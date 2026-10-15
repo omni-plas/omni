@@ -18,18 +18,19 @@ def build_cfg(statements):
     def fresh(prefix='b'):
         name=f'{prefix}{counter[0]}'; counter[0]+=1; return name
 
-    def sequence(items, fallthrough=None):
+    def sequence(items, fallthrough=None, entry_name=None):
         current=[]
         for stmt in items:
             if isinstance(stmt,If):
                 if current:
-                    name=fresh(); blocks.append(CFGBlock(name,tuple(current),()))
+                    name=entry_name or fresh(); blocks.append(CFGBlock(name,tuple(current),()))
                     current=[]
+                    entry_name=None
                 then_name=fresh('then'); else_name=fresh('else'); join_name=fresh('join')
                 cond_name=fresh('cond')
                 blocks.append(CFGBlock(cond_name,(stmt,), (then_name,else_name)))
-                then_blocks=sequence(stmt.then_body,join_name)
-                else_blocks=sequence(stmt.else_body,join_name)
+                then_blocks=sequence(stmt.then_body,join_name,then_name)
+                else_blocks=sequence(stmt.else_body,join_name,else_name)
                 if then_blocks and then_blocks[-1].successors==() and (not then_blocks[-1].statements or not isinstance(then_blocks[-1].statements[-1], Return)):
                     last=then_blocks[-1]; blocks[blocks.index(last)]=CFGBlock(last.name,last.statements,(join_name,))
                 if else_blocks and else_blocks[-1].successors==() and (not else_blocks[-1].statements or not isinstance(else_blocks[-1].statements[-1], Return)):
@@ -41,14 +42,14 @@ def build_cfg(statements):
                     current=[]
                 cond_name=fresh('while_cond'); body_name=fresh('while_body'); exit_name=fresh('while_exit')
                 blocks.append(CFGBlock(cond_name,(stmt.condition,),(body_name,exit_name)))
-                body_blocks=sequence(stmt.body,cond_name)
+                body_blocks=sequence(stmt.body,cond_name,body_name)
                 if body_blocks and body_blocks[-1].successors==():
                     last=body_blocks[-1]; blocks[blocks.index(last)]=CFGBlock(last.name,last.statements,(cond_name,))
                 blocks.append(CFGBlock(exit_name,(),()))
             else:
                 current.append(stmt)
         if current:
-            name=fresh(); successors=() if fallthrough is None or isinstance(current[-1], Return) else (fallthrough,)
+            name=entry_name or fresh(); successors=() if fallthrough is None or isinstance(current[-1], Return) else (fallthrough,)
             block=CFGBlock(name,tuple(current),successors); blocks.append(block); return (block,)
         return tuple(b for b in blocks if b.name.startswith(('then','else','while_body')))
 
