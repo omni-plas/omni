@@ -24,5 +24,5 @@ def link_functions(functions):
     fragments=[]
     from .native_symbol_reloc import call_rel32
     for name,code,sites in functions:
-        fragments.append(NativeFragment(name,code,symbol_relocations=tuple(call_rel32(s.immediate_offset,s.instruction_end,s.target) for s in sites)))
+        fragments.append(NativeFragment(name,code,symbol_relocations=tuple(call_rel32(s.immediate_offset,s.target,s.instruction_end) for s in sites)))
     return link_fragments(tuple(fragments))
