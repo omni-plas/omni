@@ -68,6 +68,6 @@ def _emit_c_function(function: FunctionIR) -> list[str]:
             if len(op.inputs) != 1 or op.inputs[0] not in declared:
                 raise EmitterError("return requires one defined input")
             lines.append(f"    return {_c_name(op.inputs[0])};")
-            continue
+            return lines
         raise EmitterError(f"unsupported C operation: {op.opcode}")
     raise EmitterError(f"function has no return: {function.name}")
