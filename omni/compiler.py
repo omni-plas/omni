@@ -26,7 +26,7 @@ class CompilationPlan:
     def requires(self, name: str) -> bool:
         if not isinstance(name, str) or not name.strip():
             raise ValueError("semantic requirement name must be non-empty")
-        return name.strip() in self.semantic_requirements
+        return name.strip() == "program" or name.strip() in self.semantic_requirements
 
 
 def plan_compilation(document: Mapping[str, Any] | UIR) -> CompilationPlan:
