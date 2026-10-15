@@ -69,9 +69,15 @@ def _function(function,signatures,strict_calls=True):
             then_cont=current; current=else_b
             for child in s.else_body:stmt(child)
             else_cont=current
-            if then_cont is not None:then_cont["successors"]=[merge["name"]]
-            if else_cont is not None:else_cont["successors"]=[merge["name"]]
-            current=None if then_cont is None and else_cont is None else else_cont if then_cont is None else then_cont if else_cont is None else merge; return
+            if then_cont is not None and else_cont is not None:
+                then_cont["successors"]=[merge["name"]]
+                else_cont["successors"]=[merge["name"]]
+                current=merge
+            elif then_cont is not None:
+                current=then_cont
+            else:
+                current=else_cont
+            return
         if isinstance(s,While):
             header=new("while_header"); body=new("while_body"); exit_b=new("while_exit"); current["successors"]=[header["name"]]; current["operations"].append(Operation("jump",attributes={"target":header["name"]})); current=header
             cond,typ=_expr(s.condition,env,current["operations"],counter,signatures)
