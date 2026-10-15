@@ -59,7 +59,7 @@ def _emit_c_function(function: FunctionIR) -> list[str]:
             if len(op.inputs) != 1 or op.inputs[0] not in declared:
                 raise EmitterError("return requires one defined input")
             if function.name == "main":
-                lines.append(f"    printf(\\"%lld\\\\n\\", (long long){_c_name(op.inputs[0])});")
+                lines.append(f'    printf("%lld\\n", (long long){_c_name(op.inputs[0])});')
             lines.append(f"    return {_c_name(op.inputs[0])};")
             return lines
         raise EmitterError(f"unsupported C operation: {op.opcode}")
