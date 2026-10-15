@@ -12,7 +12,22 @@ class OmniFunction:
 _FUNC = re.compile(r"^fn\s+([A-Za-z_]\w*)\s*\(([^)]*)\)\s*\{$")
 
 def parse_source(source: str) -> tuple[OmniFunction, ...]:
-    lines = [x.strip() for x in source.splitlines() if x.strip() and not x.strip().startswith("#")]
+    # Accept compact one-line function declarations as well as the canonical
+    # multiline form. Split simple inline statements at semicolons, preserving
+    # the existing line-oriented parser and its deterministic diagnostics.
+    expanded = []
+    for raw in source.splitlines():
+        line = raw.strip()
+        inline = _INLINE_EMPTY_OR_SIMPLE.match(line)
+        if inline:
+            expanded.append(inline.group(1) + " {")
+            body = inline.group(2).strip()
+            if body:
+                expanded.extend(part.strip() for part in body.split(";") if part.strip())
+            expanded.append("}")
+        else:
+            expanded.append(raw)
+    lines = [x.strip() for x in expanded if x.strip() and not x.strip().startswith("#")]
     functions = []
     current = None
     for line in lines:
