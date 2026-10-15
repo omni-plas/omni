@@ -16,9 +16,11 @@ class DigitalSpec:
     kind: str
     name: str
     behavior: Mapping[str, Any] = field(default_factory=dict)
+    structure: Mapping[str, Any] = field(default_factory=dict)
     interfaces: tuple[str, ...] = ()
     data: Mapping[str, Any] = field(default_factory=dict)
     requirements: Mapping[str, Any] = field(default_factory=dict)
+    constraints: Mapping[str, Any] = field(default_factory=dict)
     extensions: Mapping[str, Any] = field(default_factory=dict)
     media: Mapping[str, Any] = field(default_factory=dict)
     format: str | None = None
@@ -27,8 +29,8 @@ class DigitalSpec:
     def validate(self) -> None:
         if not self.kind.strip() or not self.name.strip():
             raise ValueError("digital kind and name must be non-empty")
-        for name, value in (("behavior", self.behavior), ("data", self.data),
-                            ("requirements", self.requirements), ("extensions", self.extensions),
+        for name, value in (("behavior", self.behavior), ("structure", self.structure), ("data", self.data),
+                            ("requirements", self.requirements), ("constraints", self.constraints), ("extensions", self.extensions),
                             ("media", self.media), ("metadata", self.metadata)):
             if not isinstance(value, Mapping):
                 raise TypeError(f"{name} must be an object")
@@ -39,7 +41,7 @@ class DigitalSpec:
         self.validate()
         return {
             "kind": self.kind, "name": self.name, "behavior": dict(self.behavior),
-            "interfaces": list(self.interfaces), "data": dict(self.data),
-            "requirements": dict(self.requirements), "extensions": dict(self.extensions),
+            "structure": dict(self.structure), "interfaces": list(self.interfaces), "data": dict(self.data),
+            "requirements": dict(self.requirements), "constraints": dict(self.constraints), "extensions": dict(self.extensions),
             "media": dict(self.media), "format": self.format, "metadata": dict(self.metadata),
         }
