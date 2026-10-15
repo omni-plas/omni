@@ -42,6 +42,9 @@ class Program:
 
     def __len__(self):
         return len(self.functions)
+
+    def __getitem__(self, index):
+        return self.functions[index]
 _KEYWORDS={"fn":TokenKind.FN,"let":TokenKind.LET,"return":TokenKind.RETURN,"true":TokenKind.TRUE,"false":TokenKind.FALSE,"if":TokenKind.IF,"else":TokenKind.ELSE,"while":TokenKind.WHILE}
 
 def tokenize(source:str)->tuple[Token,...]:
