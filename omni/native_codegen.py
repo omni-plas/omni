@@ -16,7 +16,7 @@ from .types import TypeKind
 _BASE = 0x400000
 _PAGE = 0x1000
 _SYSV_INTEGER_ARGUMENT_REGISTERS = (7, 6, 2, 1, 8, 9)  # rdi,rsi,rdx,rcx,r8,r9
-_ALLOCATABLE_REGISTERS = (3, 4, 5, 10, 11, 12, 13, 14, 15)
+_ALLOCATABLE_REGISTERS = (3, 5, 10, 11, 12, 13, 14, 15)
 
 
 class NativeCodegenError(ValueError):
