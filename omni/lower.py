@@ -11,8 +11,9 @@ from .uir import UIR, UIRValidationError, validate_uir
 
 def _type_from_spec(spec: Any) -> TypeRef:
     if isinstance(spec, str):
+        canonical = "integer" if spec == "int" else spec
         try:
-            return TypeRef(TypeKind(spec))
+            return TypeRef(TypeKind(canonical))
         except ValueError:
             return TypeRef(TypeKind.STRUCT, name=spec)
     if not isinstance(spec, Mapping):
@@ -20,6 +21,7 @@ def _type_from_spec(spec: Any) -> TypeRef:
     kind = spec.get("kind")
     if not isinstance(kind, str):
         raise UIRValidationError("type.kind must be a string")
+    kind = "integer" if kind == "int" else kind
     try:
         type_kind = TypeKind(kind)
     except ValueError as exc:
@@ -36,6 +38,8 @@ def _type_from_spec(spec: Any) -> TypeRef:
         fields=fields,
         nullable=bool(spec.get("nullable", False)),
         metadata=dict(spec.get("metadata", {})),
+        bits=spec.get("bits"),
+        signed=spec.get("signed"),
     )
     result.validate()
     return result
@@ -52,16 +56,33 @@ def lower_to_ir(document: Mapping[str, Any] | UIR) -> ModuleIR:
         for name, spec in dict(semantics.get("types", {})).items()
     }
     functions: list[FunctionIR] = []
-    for function in semantics.get("functions", ()):  # extensible: additional semantic nodes may coexist
+    raw_functions = semantics.get("functions", ())
+    if isinstance(raw_functions, Mapping):
+        normalized_functions = []
+        for function_name, function_doc in raw_functions.items():
+            if not isinstance(function_doc, Mapping):
+                raise UIRValidationError("semantics.functions entries must be objects")
+            normalized_functions.append({"name": function_name, **dict(function_doc)})
+        raw_functions = normalized_functions
+    if not isinstance(raw_functions, (list, tuple)):
+        raise UIRValidationError("semantics.functions must be an object or array")
+    for function in raw_functions:  # extensible: additional semantic nodes may coexist
         if not isinstance(function, Mapping):
             raise UIRValidationError("semantics.functions entries must be objects")
         name = function.get("name")
         if not isinstance(name, str) or not name.strip():
             raise UIRValidationError("function.name must be a non-empty string")
-        parameters = {
-            str(key): _type_from_spec(value)
-            for key, value in dict(function.get("parameters", {})).items()
-        }
+        raw_parameters = function.get("parameters", {})
+        if isinstance(raw_parameters, Mapping):
+            parameters = {str(key): _type_from_spec(value) for key, value in raw_parameters.items()}
+        elif isinstance(raw_parameters, (list, tuple)):
+            parameters = {
+                str(parameter.get("name")) if isinstance(parameter, Mapping) else str(parameter):
+                    _type_from_spec(parameter.get("type", "integer")) if isinstance(parameter, Mapping) else TypeRef(TypeKind.INTEGER)
+                for parameter in raw_parameters
+            }
+        else:
+            raise UIRValidationError(f"function {name} parameters must be an object or array")
         result = _type_from_spec(function.get("result", "void"))
         def lower_operation(op: Mapping[str, Any]) -> Operation:
             if not isinstance(op, Mapping):
@@ -75,6 +96,8 @@ def lower_to_ir(document: Mapping[str, Any] | UIR) -> ModuleIR:
 
         cfg = function.get("control_flow", {})
         raw_blocks = cfg.get("blocks", ()) if isinstance(cfg, Mapping) else ()
+        if not raw_blocks:
+            raw_blocks = function.get("blocks", ())
         if raw_blocks:
             blocks = []
             for raw_block in raw_blocks:
