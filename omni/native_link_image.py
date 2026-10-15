@@ -16,7 +16,7 @@ def link_image(fragments, globals_=(), external_symbols=None):
     data=bytearray()
     data_symbols={}
     for item in globals_:
-        pos=align_up(len(data), item.alignment)
+        pos=align_up(len(code) + len(data), item.alignment) - len(code)
         if pos>len(data): data.extend(b'\0'*(pos-len(data)))
         data_symbols[item.name]=len(code)+pos
         data.extend(item.data)
