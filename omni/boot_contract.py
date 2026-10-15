@@ -31,6 +31,9 @@ def require_boot_capabilities(target: TargetDescriptor, contract: BootContract) 
     if contract.target != target:
         raise OSImageError("boot contract target does not match requested target")
     contract.validate()
-    target.require("boot_protocol", contract.boot_protocol)
-    target.require("firmware", contract.firmware)
-    target.require("filesystem", contract.filesystem)
+    try:
+        target.require("boot_protocol", contract.boot_protocol)
+        target.require("firmware", contract.firmware)
+        target.require("filesystem", contract.filesystem)
+    except ValueError as exc:
+        raise OSImageError(str(exc)) from exc
