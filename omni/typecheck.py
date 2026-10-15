@@ -62,7 +62,7 @@ def _check_function(function: FunctionIR) -> list[TypeDiagnostic]:
                     diagnostics.append(_diag("IR002", f"use of undefined value: {name}", function, block, name))
             if len(operation.outputs) != len(set(operation.outputs)):
                 diagnostics.append(_diag("IR003", f"duplicate operation output: {operation.opcode}", function, block))
-            declared = operation.attributes.get("input_types")
+            declared = operation.input_types or operation.attributes.get("input_types")
             if declared is not None:
                 if not isinstance(declared, (list, tuple)) or len(declared) != len(operation.inputs):
                     diagnostics.append(_diag("IR004", "input_types must match operation inputs", function, block))
@@ -73,13 +73,14 @@ def _check_function(function: FunctionIR) -> list[TypeDiagnostic]:
             output_type = operation.attributes.get("output_type")
             if output_type is not None and not isinstance(output_type, TypeRef):
                 diagnostics.append(_diag("IR006", "output_type must be a TypeRef", function, block))
-            for output in operation.outputs:
+            for index, output in enumerate(operation.outputs):
                 if output in definitions:
                     diagnostics.append(_diag("IR007", f"redefinition of value: {output}", function, block, output))
-                elif isinstance(output_type, TypeRef):
-                    definitions[output] = output_type
                 else:
-                    definitions[output] = TypeRef(TypeKind.ANY)
+                    inferred_type = output_type
+                    if inferred_type is None and operation.output_types:
+                        inferred_type = operation.output_types[index]
+                    definitions[output] = inferred_type if isinstance(inferred_type, TypeRef) else TypeRef(TypeKind.ANY)
             if operation.opcode in {"return", "branch"}:
                 terminated = True
     return diagnostics
