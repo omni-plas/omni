@@ -17,10 +17,17 @@ class InstallerVerificationError(ValueError):
 def verify_installer(payload: bytes) -> dict[str, Any]:
     if not isinstance(payload, bytes):
         raise TypeError("installer payload must be bytes")
+    # Validate the ZIP end-of-central-directory comment length explicitly.
+    # zipfile is permissive about a corrupted comment-length field, which can
+    # otherwise make a modified archive appear valid when its package CRCs pass.
+    eocd = payload.rfind(b"PK\\x05\\x06")
+    if eocd < 0 or len(payload) < eocd + 22:
+        raise InstallerVerificationError("invalid installer archive directory")
+    comment_length = int.from_bytes(payload[eocd + 20:eocd + 22], "little")
+    if eocd + 22 + comment_length != len(payload):
+        raise InstallerVerificationError("installer archive directory length mismatch")
     try:
         with zipfile.ZipFile(io.BytesIO(payload), "r") as archive:
-            if archive.comment:
-                raise InstallerVerificationError("unexpected trailing installer data")
             names = archive.namelist()
             if "install.json" not in names:
                 raise InstallerVerificationError("installer is missing install.json")
