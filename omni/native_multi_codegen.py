@@ -46,9 +46,15 @@ def _compile_function(fn,known):
                 code+=_mov_rr(dst,a)+_rr({'add':b'\x01','sub':b'\x29','mul':b'\x0f\xaf'}[op.opcode],dst,b); regs[op.outputs[0]]=dst
             elif op.opcode=='move':
                 if len(op.inputs)!=1 or len(op.outputs)!=1: raise NativeCodegenError('invalid move')
-                try: dst=next(free)
-                except StopIteration as e: raise NativeCodegenError('register limit exceeded') from e
-                code+=_mov_rr(dst,get(op.inputs[0])); regs[op.outputs[0]]=dst
+                output=op.outputs[0]
+                if output in regs:
+                    # Reassignment must update the existing location so a
+                    # loop's back-edge observes the new value on each iteration.
+                    dst=regs[output]
+                else:
+                    try: dst=next(free)
+                    except StopIteration as e: raise NativeCodegenError('register limit exceeded') from e
+                code+=_mov_rr(dst,get(op.inputs[0])); regs[output]=dst
             elif op.opcode=='compare':
                 if len(op.inputs)!=2 or len(op.outputs)!=1: raise NativeCodegenError('compare arity')
                 cc=_CC.get(op.attributes.get('operator'))
