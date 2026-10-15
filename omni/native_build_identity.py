@@ -9,7 +9,8 @@ class BuildIdentity:
     target:str
     manifest:str
     artifact:str
+    entry:str = ""
 
     @classmethod
     def create(cls,target:str,manifest:dict,artifact:bytes):
-        return cls(target,manifest_digest(manifest),sha256(artifact))
+        return cls(target,manifest_digest(manifest),sha256(artifact),str(manifest.get("entry", "")))
