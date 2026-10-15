@@ -19,6 +19,8 @@ def verify_installer(payload: bytes) -> dict[str, Any]:
         raise TypeError("installer payload must be bytes")
     try:
         with zipfile.ZipFile(io.BytesIO(payload), "r") as archive:
+            if archive.comment:
+                raise InstallerVerificationError("unexpected trailing installer data")
             names = archive.namelist()
             if "install.json" not in names:
                 raise InstallerVerificationError("installer is missing install.json")
