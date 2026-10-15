@@ -102,7 +102,7 @@ def _installation_json(args: argparse.Namespace) -> str:
     plan = plan_installation(target, kind=InstallerKind(args.kind), artifact_format=args.artifact_format, bootable=args.bootable, filesystem=args.filesystem, artifacts=tuple(args.artifact), metadata=_metadata(args.metadata))
     if args.manifest:
         return plan.render_manifest()
-    return json.dumps({"identity": plan.identity(), "target": plan.target.identity(), "kind": plan.kind.value, "artifact_format": plan.artifact_format, "bootable": plan.bootable, "filesystem": plan.filesystem, "artifacts": list(plan.artifacts), "metadata": dict(plan.metadata)}, ensure_ascii=False, sort_keys=True)
+    return json.dumps({"identity": plan.identity(), "target": "/".join(part for part in (plan.target.platform, plan.target.architecture, plan.target.abi) if part), "kind": plan.kind.value, "artifact_format": plan.artifact_format, "bootable": plan.bootable, "filesystem": plan.filesystem, "artifacts": list(plan.artifacts), "metadata": dict(plan.metadata)}, ensure_ascii=False, sort_keys=True)
 
 
 def _validate_native(path: Path) -> int:
