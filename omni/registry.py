@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from threading import RLock
 
 from .backends import Backend
@@ -126,6 +127,18 @@ class CompilerRegistry:
             raise RegistryError(
                 f"language {definition.identity} has a definition but no executable frontend"
             ) from exc
+
+    def frontend_for_path(self, path: str | Path) -> Frontend:
+        """Resolve a source frontend from a file path's suffix.
+
+        This is the preferred discovery API for build tools: it derives the
+        language from the registered extension contracts instead of maintaining
+        a separate hard-coded list of source suffixes.
+        """
+        source_path = Path(path)
+        if not source_path.suffix:
+            raise RegistryError(f"source path has no extension: {source_path}")
+        return self.frontend_for_extension(source_path.suffix)
 
     def languages(self) -> tuple[str, ...]:
         with self._lock:
