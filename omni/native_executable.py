@@ -20,7 +20,17 @@ def compile_native_executable(module: ModuleIR, target: TargetDescriptor | None 
     code generation without an intermediate external compiler.
     """
     module.validate()
-    complex_module = len(module.functions) > 1 or any(len(function.blocks) > 1 for function in module.functions)
+    simple_opcodes = {"const", "add", "sub", "mul", "return"}
+    complex_module = (
+        len(module.functions) > 1
+        or any(len(function.blocks) > 1 for function in module.functions)
+        or any(
+            operation.opcode not in simple_opcodes
+            for function in module.functions
+            for block in function.blocks
+            for operation in block.operations
+        )
+    )
     if complex_module:
         return emit_multi_x86_64_elf(module, target)
     return emit_x86_64_elf(module, target)
